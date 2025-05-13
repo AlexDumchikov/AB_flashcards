@@ -4,19 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Флеш-карты по A/B Тестированию</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #3498db; /* Синий */
-            --secondary-color: #2ecc71; /* Зеленый */
-            --background-color: #ecf0f1; /* Светло-серый */
-            --card-background-color: #ffffff; /* Белый */
-            --text-color: #2c3e50; /* Темно-серый */
-            --shadow-color: rgba(0, 0, 0, 0.15);
-            --border-radius: 12px;
+            --primary-color: #6200ea; /* Фиолетовый */
+            --primary-light: #d1c4e9;  /* Светло-фиолетовый */
+            --secondary-color: #03dac6; /* Бирюзовый */
+            --secondary-light: #b2ebf2;
+            --background-color: #f3e5f5; /* Светло-розовый */
+            --card-background-color: #ffffff;
+            --text-color: #212121; /* Темно-серый */
+            --light-text-color: #757575;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --border-radius: 16px; /* Увеличенный радиус */
+            --button-radius: 8px;
+            --transition-duration: 0.3s;
             --font-family: 'Roboto', sans-serif;
         }
-
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
         body {
             font-family: var(--font-family);
@@ -24,7 +28,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* Изменено на flex-start */
             min-height: 100vh;
             margin: 0;
             padding: 20px;
@@ -32,22 +36,64 @@
             box-sizing: border-box;
         }
 
+        .controls-container {
+            display: flex;
+            justify-content: center; /* Центрирование кнопок */
+            gap: 16px; /* Увеличенный gap */
+            margin-bottom: 24px; /* Увеличенный margin */
+            width: 100%;
+            max-width: 600px; /* Ограничение ширины для центрирования на больших экранах */
+        }
+
+        .shuffle-button, .recheck-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1em;
+            border-radius: var(--button-radius);
+            cursor: pointer;
+            transition: background-color var(--transition-duration), transform 0.2s ease;
+            box-shadow: 0 6px 12px var(--shadow-color); /* Увеличенная тень */
+            width: 100%; /* Кнопки занимают всю доступную ширину */
+            max-width: 280px; /* Максимальная ширина кнопок */
+            text-align: center;
+        }
+
+        .shuffle-button:hover, .recheck-button:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .shuffle-button:active, .recheck-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 6px var(--shadow-color); /* Уменьшенная тень */
+        }
+
+        .recheck-button {
+            background-color: var(--secondary-color);
+        }
+
+        .recheck-button:hover {
+            background-color: var(--secondary-light);
+        }
+
         .container {
             perspective: 1000px;
-            width: 90%;
+            width: 95%; /* Увеличено до 95% */
             max-width: 600px;
             margin-bottom: 30px;
         }
 
         .flashcard {
             width: 100%;
-            height: 350px;
+            height: 400px; /* Увеличенная высота */
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
             cursor: pointer;
             border-radius: var(--border-radius);
-            box-shadow: 0 10px 25px var(--shadow-color);
+            box-shadow: 0 12px 24px var(--shadow-color); /* Увеличенная тень */
         }
 
         .flashcard.flipped {
@@ -63,46 +109,50 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 25px;
+            padding: 30px; /* Увеличенный padding */
             box-sizing: border-box;
             border-radius: var(--border-radius);
             background-color: var(--card-background-color);
             text-align: center;
-            overflow-y: auto; /* Для прокрутки если текст не помещается */
+            overflow-y: auto;
+            border: 2px solid var(--primary-color);
         }
 
         .flashcard-front {
-            border: 2px solid var(--primary-color);
+             border: 3px solid var(--primary-color);
         }
 
         .flashcard-back {
             transform: rotateY(180deg);
-            border: 2px solid var(--secondary-color);
+             border: 3px solid var(--secondary-color);
         }
 
         .flashcard-face h2 {
             margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 1.6em;
+            margin-bottom: 20px; /* Увеличенный margin */
+            font-size: 1.8em; /* Увеличенный размер шрифта */
             color: var(--primary-color);
         }
+
         .flashcard-back h2 {
-            color: var(--secondary-color);
+             color: var(--secondary-color);
         }
 
         .flashcard-face p {
             font-size: 1.1em;
-            line-height: 1.6;
+            line-height: 1.7; /* Увеличенный line-height */
+            color: var(--text-color);
         }
-        .flashcard-back p {
-             font-size: 1em;
+        .flashcard-back p{
+             font-size: 1.1em;
+             line-height: 1.7; /* Увеличенный line-height */
         }
 
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 90%;
+            width: 95%; /* Увеличено до 95% */
             max-width: 600px;
             margin-bottom: 20px;
         }
@@ -111,83 +161,200 @@
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 12px 25px;
-            font-size: 1em;
-            border-radius: var(--border-radius);
+            padding: 12px 24px;
+            font-size: 1.1em;
+            border-radius: var(--button-radius);
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: background-color var(--transition-duration), transform 0.2s ease;
+            box-shadow: 0 6px 12px var(--shadow-color); /* Увеличенная тень */
+             width: 30%; /* Кнопки занимают 30% */
+            min-width: 120px; /* Минимальная ширина 120px */
+            text-align: center;
         }
 
         .nav-button:hover {
-            background-color: #2980b9; /* Темнее синий */
+            background-color: var(--primary-light);
             transform: translateY(-2px);
+             box-shadow: 0 8px 16px var(--shadow-color);
         }
+
         .nav-button:active {
-            transform: translateY(0px);
+            transform: translateY(0);
+            box-shadow: 0 3px 6px var(--shadow-color);
         }
 
         .nav-button:disabled {
-            background-color: #bdc3c7; /* Серый */
+            background-color: #b0bec5; /* Серый */
             cursor: not-allowed;
             transform: translateY(0);
+            box-shadow: none;
         }
 
         #counter {
-            font-size: 1.1em;
+            font-size: 1.2em; /* Увеличенный размер шрифта */
             font-weight: 500;
+            color: var(--light-text-color);
         }
 
-        .title {
-            font-size: 2.5em;
-            color: var(--text-color);
-            margin-bottom: 30px;
+        .feedback-buttons {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .feedback-button {
+            padding: 10px 20px;
+            border-radius: var(--button-radius);
+            cursor: pointer;
+            transition: background-color var(--transition-duration), transform 0.2s ease;
+            font-size: 1em;
+            width: 40%;
             text-align: center;
-            font-weight: 700;
-            text-shadow: 1px 1px 2px var(--shadow-color);
+            box-shadow: 0 4px 8px var(--shadow-color);
         }
 
-        /* Адаптивность */
+        .feedback-button:hover {
+            transform: translateY(-2px);
+             box-shadow: 0 6px 12px var(--shadow-color);
+        }
+
+        .feedback-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .know-button {
+            background-color: #4caf50; /* Зеленый */
+            color: white;
+            border: none;
+        }
+
+        .know-button:hover {
+            background-color: #66bb6a;
+        }
+
+        .dont-know-button {
+            background-color: #f44336; /* Красный */
+            color: white;
+            border: none;
+        }
+
+        .dont-know-button:hover {
+            background-color: #e57373;
+        }
+        .stats-container {
+            width: 95%;
+            max-width: 600px;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: var(--card-background-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 6px 12px var(--shadow-color);
+            text-align: center;
+            font-size: 1.1em;
+            color: var(--text-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .stats-container p {
+            margin: 8px 0;
+        }
+
+        .reset-buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 24px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .reset-button, .recheck-button-bottom {
+             background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1em;
+            border-radius: var(--button-radius);
+            cursor: pointer;
+            transition: background-color var(--transition-duration), transform 0.2s ease;
+            box-shadow: 0 6px 12px var(--shadow-color); /* Увеличенная тень */
+            width: 100%; /* Кнопки занимают всю доступную ширину */
+            max-width: 280px; /* Максимальная ширина кнопок */
+            text-align: center;
+        }
+
+        .reset-button:hover, .recheck-button-bottom:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+             box-shadow: 0 8px 16px var(--shadow-color);
+        }
+
+        .reset-button:active, .recheck-button-bottom:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 6px var(--shadow-color);
+        }
+        .recheck-button-bottom{
+             background-color: var(--secondary-color);
+        }
+        .recheck-button-bottom:hover {
+            background-color: var(--secondary-light);
+        }
+
         @media (max-width: 600px) {
             .flashcard {
-                height: 400px; /* Больше высота для маленьких экранов */
+                height: 450px;
             }
             .flashcard-face h2 {
-                font-size: 1.4em;
+                font-size: 1.6em;
             }
             .flashcard-face p {
                 font-size: 1em;
             }
-            .flashcard-back p {
-                font-size: 0.9em;
-            }
-            .title {
-                font-size: 2em;
+             .navigation {
+                flex-direction: column;
             }
             .nav-button {
-                padding: 10px 15px;
-                font-size: 0.9em;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            #counter{
+                margin-bottom: 15px;
+            }
+            .controls-container {
+                flex-direction: column;
+            }
+            .shuffle-button, .recheck-button {
+                max-width: 100%;
+            }
+             .feedback-buttons {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .feedback-button {
+                width: 100%;
+                max-width: 280px;
+            }
+            .reset-buttons-container {
+                flex-direction: column;
+            }
+            .reset-button, .recheck-button-bottom{
+                 max-width: 100%;
             }
         }
          @media (max-width: 400px) {
             .flashcard {
-                height: 450px;
+                 height: 500px;
             }
-             .navigation {
-                flex-direction: column;
-             }
-             .nav-button {
-                width: 100%;
-                margin-bottom: 10px;
-             }
-             #counter {
-                 margin-bottom: 15px;
-             }
-        }
+         }
     </style>
 </head>
 <body>
-    <h1 class="title">Флеш-карты по A/B Тестированию</h1>
+    <div class="controls-container">
+        <button class="shuffle-button" id="shuffle-button">Перемешать</button>
+        <button class="recheck-button" id="recheck-button">Повторить</button>
+    </div>
 
     <div class="container">
         <div class="flashcard" id="flashcard">
@@ -198,14 +365,27 @@
             <div class="flashcard-face flashcard-back">
                 <h2 id="card-back-title">Ответ/Определение</h2>
                 <p id="card-back-content"></p>
+                 <div class="feedback-buttons">
+                    <button class="feedback-button know-button">Знаю</button>
+                    <button class="feedback-button dont-know-button">Не знаю</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="navigation">
-        <button class="nav-button" id="prev-button">Назад</button>
+        <button class="nav-button" id="prev-button" disabled>Назад</button>
         <span id="counter">1 / 100</span>
         <button class="nav-button" id="next-button">Вперед</button>
+    </div>
+     <div class="stats-container" id="stats-container" style="display: none;">
+        <p>Пройдено: <span id="cards-passed">0</span></p>
+        <p>Знаю: <span id="cards-known">0</span></p>
+        <p>% Знаю: <span id="percent-known">0%</span></p>
+    </div>
+    <div class="reset-buttons-container" style="display: none;">
+        <button class="reset-button" id="reset-button">Начать заново</button>
+        <button class="recheck-button-bottom" id="recheck-button-bottom">Повторить Неизвестные</button>
     </div>
 
     <script>
@@ -314,71 +494,222 @@
             { frontTitle: "Недостаточный трафик", frontContent: "Последствия?", backTitle: "Проблема", backContent: "Тесты будут длиться очень долго или не достигнут статистической значимости, делая выводы ненадежными." },
             { frontTitle: "Изменение вариантов во время теста", frontContent: "Можно ли так делать?", backTitle: "Запрет", backContent: "Любые изменения в контрольной группе или варианте во время активного теста аннулируют его результаты." },
             { frontTitle: "Неравномерное распределение трафика", frontContent: "К чему приводит?", backTitle: "Искажение", backContent: "Если трафик распределяется не случайно (например, 50/50), это может внести предвзятость в результаты. Убедитесь в корректной настройке сплита." },
-            { frontTitle: "Забыть о внешних событиях", frontContent: "Пример?", backTitle: "Пример", backContent: "Запуск крупной рекламной кампании, технические проблемы на сайте или праздники могут сильно повлиять на результаты теста, если их не учесть." },
-            { frontTitle: "Чрезмерная уверенность в интуиции", frontContent: "Почему данные важнее?", backTitle: "Обоснование", backContent: "Интуиция может быть хорошей отправной точкой для гипотез, но окончательные решения должны основываться на объективных данных A/B тестов." },
-            { frontTitle: "Остановка на локальном максимуме", frontContent: "Что это значит?", backTitle: "Определение", backContent: "Достижение точки, где небольшие итеративные улучшения больше не дают значимого роста. Может потребоваться более радикальное тестирование (например, редизайн), чтобы выйти на новый уровень." },
+            { frontTitle: "Забыть о внешних событиях", frontContent: "Пример?", backTitle: "Влияние", backContent: "Праздники, рекламные кампании, сезонные тренды могут повлиять на результаты. Учитывайте их при планировании и анализе." },
+            { frontTitle: "Отсутствие мобильной оптимизации", frontContent: "Почему это критично?", backTitle: "Важность", backContent: "Большинство пользователей сейчас просматривают сайты с мобильных устройств. Тестирование только на десктопе даст неполную картину." },
+            { frontTitle: "Игнорирование времени загрузки", frontContent: "Как влияет на результаты?", backTitle: "Влияние", backContent: "Медленная загрузка страницы может привести к потере пользователей и исказить результаты A/B теста, особенно на мобильных устройствах." },
 
-            // 91-100: Будущее и тренды A/B тестирования
-            { frontTitle: "Искусственный интеллект (AI) в A/B тестировании", frontContent: "Как применяется?", backTitle: "Применения", backContent: "Автоматическая генерация гипотез, персонализация в реальном времени, предиктивный анализ результатов, автоматическая оптимизация трафика между вариантами (multi-armed bandit)." },
-            { frontTitle: "Серверное A/B тестирование (Server-Side Testing)", frontContent: "Преимущества?", backTitle: "Плюсы", backContent: "Больше гибкости, возможность тестировать сложные изменения в бэкенде, логике приложения, API. Меньше мерцания контента (flicker effect)." },
-            { frontTitle: "Клиентское A/B тестирование (Client-Side Testing)", frontContent: "Особенности?", backTitle: "Характеристики", backContent: "Изменения вносятся в браузере пользователя с помощью JavaScript. Проще в реализации для фронтенд-изменений, но может вызывать мерцание." },
-            { frontTitle: "A/B тестирование в мобильных приложениях", frontContent: "Специфика?", backTitle: "Отличия", backContent: "Требует SDK, учет особенностей платформ (iOS, Android), процессов релиза в сторах. Часто используется для тестирования UI/UX, онбординга, монетизации." },
-            { frontTitle: "Персонализация на основе AI", frontContent: "Следующий шаг после A/B?", backTitle: "Развитие", backContent: "Алгоритмы динамически подбирают наилучший вариант контента или функционала для каждого индивидуального пользователя, а не для сегментов." },
-            { frontTitle: "Омниканальное A/B тестирование", frontContent: "Что это?", backTitle: "Определение", backContent: "Тестирование и согласование пользовательского опыта на всех точках контакта с клиентом (сайт, мобильное приложение, email, физические магазины)." },
-            { frontTitle: "Голосовой интерфейс (Voice UI) и A/B тестирование", frontContent: "Новые вызовы?", backTitle: "Задачи", backContent: "Тестирование различных формулировок, интонаций, сценариев взаимодействия в голосовых помощниках и приложениях." },
-            { frontTitle: "A/B тестирование в AR/VR", frontContent: "Перспективы?", backTitle: "Возможности", backContent: "Тестирование пользовательских интерфейсов, взаимодействий, уровней погружения в средах дополненной и виртуальной реальности." },
-            { frontTitle: "Этика AI в тестировании", frontContent: "Новые вопросы?", backTitle: "Проблемы", backContent: "Обеспечение справедливости, прозрачности и отсутствия предвзятости в алгоритмах, используемых для персонализации и принятия решений на основе тестов." },
-            { frontTitle: "Культура экспериментов", frontContent: "Ключ к успеху?", backTitle: "Важность", backContent: "Создание в компании среды, где поощряются эксперименты, анализ данных и постоянное обучение для улучшения продукта и бизнес-показателей." }
+            // 91-100: Будущее A/B тестирования
+            { frontTitle: "Персонализация на основе AI", frontContent: "Тенденция?", backTitle: "Направление", backContent: "Использование искусственного интеллекта для автоматической персонализации вариантов A/B тестов для разных пользователей в реальном времени." },
+            { frontTitle: "Автоматическая оптимизация", frontContent: "Заменит ли A/B тесты?", backTitle: "Будущее", backContent: "Инструменты машинного обучения могут автоматически перераспределять трафик в пользу более эффективных вариантов, но A/B тестирование останется важным для проверки новых гипотез." },
+            { frontTitle: "Голосовой поиск и A/B тестирование", frontContent: "Как это связано?", backTitle: "Новый вызов", backContent: "С ростом популярности голосового поиска возникает необходимость оптимизировать контент и пользовательский опыт для голосовых команд, что открывает новые возможности для A/B тестирования." },
+            { frontTitle: "Тестирование омниканального опыта", frontContent: "Что это значит?", backTitle: "Подход", backContent: "A/B тестирование выходит за рамки веба и приложений. Компании начинают тестировать согласованность и эффективность взаимодействия с клиентами через разные каналы (email, социальные сети, физические магазины)." },
+            { frontTitle: "Конфиденциальность и A/B тестирование", frontContent: "Новые ограничения?", backTitle: "Вызовы", backContent: "Ужесточение правил конфиденциальности (например, GDPR) требует новых подходов к сбору и использованию данных для A/B тестирования, например, использование дифференциальной приватности." },
+            { frontTitle: "Тестирование эмоционального воздействия", frontContent: "Как измерить эмоции?", backTitle: "Методы", backContent: "Использование нейромаркетинга, анализа выражений лица и других методов для оценки эмоциональной реакции пользователей на разные варианты и оптимизации пользовательского опыта на основе эмоций." },
+            { frontTitle: "A/B тестирование в B2B", frontContent: "Специфика?", backTitle: "Отличия", backContent: "В B2B циклах продаж решения часто принимаются командой, а не одним человеком. A/B тестирование должно учитывать сложные пути принятия решений и разные роли заинтересованных сторон." },
+            { frontTitle: "Тестирование UX-анимаций", frontContent: "Зачем тестировать анимации?", backTitle: "Оптимизация", backContent: "Анимации могут улучшить или ухудшить пользовательский опыт. A/B тестирование помогает определить, какие анимации наиболее эффективны для достижения целей." },
+            { frontTitle: "Интерактивное A/B тестирование", frontContent: "Что это?", backTitle: "Новый формат", backContent: "Пользователи могут взаимодействовать с разными элементами вариантов A и B (например, перетаскивать, изменять размер), а их действия записываются для анализа. Более глубокое понимание поведения." },
+            { frontTitle: "Будущее A/B тестирования", frontContent: "Ключевые тренды?", backTitle: "Направления", backContent: "Автоматизация, персонализация, омниканальность, учет эмоций, интерактивность, адаптация к новым технологиям (VR, AR, голосовой поиск) и изменениям в регулировании конфиденциальности." }
         ];
 
         let currentCardIndex = 0;
-        const flashcard = document.getElementById('flashcard');
-        const cardFrontTitle = document.getElementById('card-front-title');
-        const cardFrontContent = document.getElementById('card-front-content');
-        const cardBackTitle = document.getElementById('card-back-title');
-        const cardBackContent = document.getElementById('card-back-content');
+        let cardsPassed = 0;
+        let cardsKnown = 0;
+        let knownCards = [];
+        let displayedCards = [];
+        let isRecheckMode = false;
+
+        const flashcardElement = document.getElementById('flashcard');
+        const frontTitleElement = document.getElementById('card-front-title');
+        const frontContentElement = document.getElementById('card-front-content');
+        const backTitleElement = document.getElementById('card-back-title');
+        const backContentElement = document.getElementById('card-back-content');
         const prevButton = document.getElementById('prev-button');
         const nextButton = document.getElementById('next-button');
         const counterElement = document.getElementById('counter');
+        const shuffleButton = document.getElementById('shuffle-button');
+        const recheckButton = document.getElementById('recheck-button');
+        const statsContainer = document.getElementById('stats-container');
+        const cardsPassedElement = document.getElementById('cards-passed');
+        const cardsKnownElement = document.getElementById('cards-known');
+        const percentKnownElement = document.getElementById('percent-known');
+        const resetButton = document.getElementById('reset-button');
+        const recheckButtonBottom = document.getElementById('recheck-button-bottom');
+        const feedbackButtonsContainer = document.querySelector('.feedback-buttons');
 
-        function updateFlashcard() {
-            const currentData = flashcardsData[currentCardIndex];
-            cardFrontTitle.textContent = currentData.frontTitle;
-            cardFrontContent.textContent = currentData.frontContent;
-            cardBackTitle.textContent = currentData.backTitle;
-            cardBackContent.textContent = currentData.backContent;
 
-            counterElement.textContent = `${currentCardIndex + 1} / ${flashcardsData.length}`;
-
-            prevButton.disabled = currentCardIndex === 0;
-            nextButton.disabled = currentCardIndex === flashcardsData.length - 1;
-
-            // Сбросить состояние переворота при смене карточки
-            if (flashcard.classList.contains('flipped')) {
-                flashcard.classList.remove('flipped');
+        function displayCard(index) {
+            const card = displayedCards[index] || flashcardsData[index];
+            frontTitleElement.textContent = card.frontTitle;
+            frontContentElement.textContent = card.frontContent;
+            backTitleElement.textContent = card.backTitle;
+            backContentElement.textContent = card.backContent;
+            counterElement.textContent = `${index + 1} / ${displayedCards.length}`;
+            prevButton.disabled = index === 0;
+            nextButton.disabled = index === displayedCards.length - 1;
+            flashcardElement.classList.remove('flipped');
+            if (feedbackButtonsContainer) {
+                feedbackButtonsContainer.style.display = 'none';
             }
         }
 
-        flashcard.addEventListener('click', () => {
-            flashcard.classList.toggle('flipped');
-        });
+        function updateStats() {
+            cardsPassedElement.textContent = cardsPassed;
+            cardsKnownElement.textContent = cardsKnown;
+            percentKnownElement.textContent = displayedCards.length > 0
+                ? `${Math.round((cardsKnown / displayedCards.length) * 100)}%`
+                : '0%';
+        }
 
-        prevButton.addEventListener('click', () => {
+        function nextCard() {
+            if (currentCardIndex < displayedCards.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        }
+
+        function prevCard() {
             if (currentCardIndex > 0) {
                 currentCardIndex--;
-                updateFlashcard();
+                displayCard(currentCardIndex);
+            }
+        }
+
+        function shuffleCards() {
+            let currentIndex = flashcardsData.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [flashcardsData[currentIndex], flashcardsData[randomIndex]] = [
+                    flashcardsData[randomIndex], flashcardsData[currentIndex]];
+            }
+            displayedCards = [...flashcardsData];
+            currentCardIndex = 0;
+            cardsPassed = 0;
+            cardsKnown = 0;
+            knownCards = [];
+            isRecheckMode = false;
+            statsContainer.style.display = 'none';
+            resetButtonsContainer.style.display = 'none';
+            displayCard(currentCardIndex);
+            prevButton.disabled = true;
+            nextButton.disabled = false;
+        }
+
+        function recheckUnknownCards() {
+            if (knownCards.length === flashcardsData.length && !isRecheckMode) {
+                return;
+            }
+            if (!isRecheckMode) {
+                displayedCards = flashcardsData.filter((_, index) => !knownCards.includes(index));
+                isRecheckMode = true;
+                cardsPassed = 0;
+                cardsKnown = 0;
+            }
+
+            if (displayedCards.length === 0) {
+                alert("Вы выучили все карточки!");
+                isRecheckMode = false;
+                displayedCards = [...flashcardsData];
+                currentCardIndex = 0;
+                cardsPassed = 0;
+                cardsKnown = 0;
+                knownCards = [];
+                statsContainer.style.display = 'none';
+                resetButtonsContainer.style.display = 'none';
+                displayCard(currentCardIndex);
+                prevButton.disabled = true;
+                nextButton.disabled = false;
+                return;
+            }
+            currentCardIndex = 0;
+            displayCard(currentCardIndex);
+            counterElement.textContent = `${currentCardIndex + 1} / ${displayedCards.length}`;
+            prevButton.disabled = true;
+            nextButton.disabled = displayedCards.length <= 1;
+            statsContainer.style.display = 'none';
+            resetButtonsContainer.style.display= 'none';
+        }
+
+        function markCardAsKnown(isKnown) {
+            if (isRecheckMode) {
+                const cardIndex = displayedCards[currentCardIndex]
+                if (isKnown) {
+                    cardsKnown++;
+                    knownCards.push(cardIndex);
+                    displayedCards.splice(currentCardIndex, 1);
+                } else {
+                    nextCard();
+                }
+                if (displayedCards.length === 0) {
+                    statsContainer.style.display = 'block';
+                    resetButtonsContainer.style.display = 'flex';
+                    updateStats();
+                    alert("Вы повторили все карточки!");
+                }
+                else {
+                     counterElement.textContent = `${currentCardIndex + 1} / ${displayedCards.length}`;
+                     updateStats();
+                }
+                if (displayedCards.length === 0) {
+                    statsContainer.style.display = 'block';
+                    resetButtonsContainer.style.display = 'flex';
+                    updateStats();
+                }
+                else{
+                     displayCard(currentCardIndex);
+                }
+
+            }
+            else {
+                if (isKnown) {
+                    cardsKnown++;
+                    knownCards.push(currentCardIndex);
+                }
+                cardsPassed++;
+                updateStats();
+                if (cardsPassed === flashcardsData.length) {
+                    statsContainer.style.display = 'block';
+                    resetButtonsContainer.style.display = 'flex';
+                    alert("Вы прошли все карточки!");
+                }
+            }
+        }
+
+        flashcardElement.addEventListener('click', () => {
+            flashcardElement.classList.toggle('flipped');
+            if (flashcardElement.classList.contains('flipped')) {
+                if (feedbackButtonsContainer) {
+                    feedbackButtonsContainer.style.display = 'flex';
+                }
+            }
+            else {
+                if (feedbackButtonsContainer) {
+                    feedbackButtonsContainer.style.display = 'none';
+                }
             }
         });
+        nextButton.addEventListener('click', nextCard);
+        prevButton.addEventListener('click', prevCard);
+        shuffleButton.addEventListener('click', shuffleCards);
+        recheckButton.addEventListener('click', recheckUnknownCards);
+        resetButton.addEventListener('click', shuffleCards);
+        recheckButtonBottom.addEventListener('click', recheckUnknownCards);
 
-        nextButton.addEventListener('click', () => {
-            if (currentCardIndex < flashcardsData.length - 1) {
-                currentCardIndex++;
-                updateFlashcard();
-            }
-        });
+        if (feedbackButtonsContainer) {
+            feedbackButtonsContainer.addEventListener('click', (event) => {
+                if (event.target.classList.contains('know-button')) {
+                    markCardAsKnown(true);
+                } else if (event.target.classList.contains('dont-know-button')) {
+                    markCardAsKnown(false);
+                }
+                if (!isRecheckMode) {
+                     nextCard();
+                }
 
-        // Инициализация первой карточки
-        updateFlashcard();
+            });
+        }
+
+        shuffleCards();
     </script>
 </body>
 </html>
