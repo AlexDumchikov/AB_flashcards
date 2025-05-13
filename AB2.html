@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Флеш-карты: Виды A/B Тестов и Байесовские Методы</title>
+   <title>Флеш-карты: Виды A/B Тестов и Байесовские Методы</title> 
     <style>
         :root {
             --primary-color: #5D3FD3; /* Фиолетовый */
@@ -24,10 +24,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            <!-- justify-content: center;  -->
             min-height: 100vh;
             margin: 0;
             padding: 20px;
+			padding-top: 20px; /* Чтобы не прилипало вплотную */
             color: var(--text-color);
             box-sizing: border-box;
         }
@@ -36,7 +37,7 @@
             perspective: 1200px; /* Увеличена перспектива для лучшего 3D эффекта */
             width: 90%;
             max-width: 650px; /* Немного шире для большего контента */
-            margin-bottom: 30px;
+            margin-top: 0px;
         }
 
         .flashcard {
@@ -241,7 +242,7 @@
     </style>
 </head>
 <body>
-    <h1 class="title">Виды A/B Тестов и Байесовские Методы</h1>
+     <!--  <h1 class="title">Виды A/B Тестов и Байесовские Методы</h1>  -->
 
     <div class="container">
         <div class="flashcard" id="flashcard">
@@ -257,9 +258,11 @@
     </div>
 
     <div class="navigation">
-        <button class="nav-button" id="prev-button">Назад</button>
-        <span id="counter">1 / 100</span>
-        <button class="nav-button" id="next-button">Вперед</button>
+     <button class="nav-button" id="next-button">Вперед</button>   
+		<span id="counter">1 / 100</span>
+		<button class="nav-button" id="prev-button">Назад</button>
+        
+   
     </div>
 
     <script>
