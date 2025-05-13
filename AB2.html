@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Флеш-карты: Виды A/B Тестов и Байесовские Методы</title>
+    <style>
+        :root {
+            --primary-color: #5D3FD3; /* Фиолетовый */
+            --secondary-color: #FF6B6B; /* Коралловый */
+            --background-color: #f0f2f5; /* Светло-серый фон */
+            --card-background-color: #ffffff; /* Белый */
+            --text-color: #333333; /* Темно-серый текст */
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --font-family: 'Roboto', sans-serif;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        .container {
+            perspective: 1200px; /* Увеличена перспектива для лучшего 3D эффекта */
+            width: 90%;
+            max-width: 650px; /* Немного шире для большего контента */
+            margin-bottom: 30px;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 400px; /* Увеличена высота */
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.9s cubic-bezier(0.35, 1, 0.65, 1); /* Более плавная анимация */
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            box-shadow: 0 12px 30px var(--shadow-color); /* Усиленная тень */
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px; /* Увеличен padding */
+            box-sizing: border-box;
+            border-radius: var(--border-radius);
+            background-color: var(--card-background-color);
+            text-align: center;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--background-color);
+        }
+        .flashcard-face::-webkit-scrollbar {
+            width: 8px;
+        }
+        .flashcard-face::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+        }
+        .flashcard-face::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: var(--border-radius);
+            border: 2px solid var(--background-color);
+        }
+
+
+        .flashcard-front {
+            border: 2.5px solid var(--primary-color);
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+            border: 2.5px solid var(--secondary-color);
+        }
+
+        .flashcard-face h2 { /* Термин/Вопрос */
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.5em; /* Немного уменьшен для баланса */
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        .flashcard-back h2 { /* Ответ/Определение */
+            color: var(--secondary-color);
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+        .flashcard-face .english-term {
+            font-size: 0.9em;
+            color: #7f8c8d; /* Сероватый для англ. термина */
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
+        .flashcard-face p { /* Основной текст */
+            font-size: 1.05em; /* Немного увеличен для читаемости */
+            line-height: 1.7; /* Увеличена высота строки */
+        }
+        .flashcard-back p {
+             font-size: 1em;
+             line-height: 1.65;
+        }
+        .flashcard-back ul {
+            text-align: left;
+            padding-left: 20px;
+            font-size: 0.95em;
+        }
+        .flashcard-back li {
+            margin-bottom: 8px;
+        }
+
+        .formula {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 1em;
+            color: #e74c3c; /* Красный для формул */
+            word-break: break-all;
+        }
+
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%;
+            max-width: 650px;
+            margin-bottom: 20px;
+        }
+
+        .nav-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 28px; /* Увеличен padding */
+            font-size: 1.05em; /* Увеличен размер шрифта */
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 5px 15px rgba(93, 63, 211, 0.3); /* Тень под цвет кнопки */
+        }
+
+        .nav-button:hover {
+            background-color: #4A2CA8; /* Темнее фиолетовый */
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(93, 63, 211, 0.4);
+        }
+        .nav-button:active {
+            transform: translateY(0px);
+            box-shadow: 0 5px 15px rgba(93, 63, 211, 0.3);
+        }
+
+        .nav-button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        #counter {
+            font-size: 1.15em; /* Увеличен */
+            font-weight: 500;
+        }
+
+        .title {
+            font-size: 2.8em; /* Увеличен */
+            color: var(--text-color);
+            margin-bottom: 35px; /* Увеличен отступ */
+            text-align: center;
+            font-weight: 700;
+            text-shadow: 1px 1px 3px var(--shadow-color); /* Усиленная тень */
+        }
+
+        @media (max-width: 600px) {
+            .flashcard {
+                height: 420px;
+            }
+            .flashcard-face h2 {
+                font-size: 1.3em;
+            }
+            .flashcard-back h2 {
+                font-size: 1.2em;
+            }
+            .flashcard-face p {
+                font-size: 0.95em;
+            }
+            .flashcard-back p, .flashcard-back ul {
+                font-size: 0.9em;
+            }
+            .title {
+                font-size: 2.2em;
+            }
+            .nav-button {
+                padding: 12px 20px;
+                font-size: 1em;
+            }
+        }
+         @media (max-width: 450px) {
+            .flashcard {
+                height: 480px; /* Еще больше для очень маленьких экранов */
+            }
+             .navigation {
+                flex-direction: column;
+             }
+             .nav-button {
+                width: 100%;
+                margin-bottom: 12px;
+             }
+             #counter {
+                 margin-bottom: 18px;
+                 order: -1; /* Счетчик над кнопками */
+             }
+             .flashcard-face {
+                 padding: 20px;
+             }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">Виды A/B Тестов и Байесовские Методы</h1>
+
+    <div class="container">
+        <div class="flashcard" id="flashcard">
+            <div class="flashcard-face flashcard-front">
+                <h2 id="card-front-title">Вопрос/Термин</h2>
+                <div class="english-term" id="card-front-english-term"></div>
+                <p id="card-front-content"></p>
+            </div>
+            <div class="flashcard-face flashcard-back">
+                <h2 id="card-back-title">Ответ/Определение</h2>
+                <div id="card-back-content"></div> </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-button" id="prev-button">Назад</button>
+        <span id="counter">1 / 100</span>
+        <button class="nav-button" id="next-button">Вперед</button>
+    </div>
+
+    <script>
+        const flashcardsData = [
+            // 1-5: Классический A/B тест
+            {
+                frontTitle: "Классический A/B тест",
+                frontEnglishTerm: "Classic A/B Test / Split Test",
+                frontContent: "Что это за тип теста?",
+                backTitle: "Суть и применение",
+                backContent: "<p>Сравнение двух версий (A и B) одного элемента (например, кнопки, заголовка), чтобы определить, какая версия эффективнее достигает цели (например, клики, конверсии). Трафик делится случайным образом между вариантами.</p><p><b>Когда применять:</b> Для проверки гипотез по изменению отдельных элементов, когда нужно четко понять влияние одного изменения.</p>"
+            },
+            {
+                frontTitle: "Особенность A/B теста",
+                frontEnglishTerm: "Key Feature",
+                frontContent: "Какая главная особенность классического A/B теста?",
+                backTitle: "Изолированное изменение",
+                backContent: "<p>Тестируется только ОДНО изменение между вариантом А (контроль) и вариантом B (тестовый). Это позволяет точно определить, какое именно изменение повлияло на результат.</p>"
+            },
+            {
+                frontTitle: "Различия A и B в A/B тесте",
+                frontEnglishTerm: "Difference between A and B",
+                frontContent: "Насколько сильно могут отличаться варианты A и B?",
+                backTitle: "Отличия",
+                backContent: "<p>Вариант B должен отличаться от варианта A только ОДНИМ тестируемым элементом или характеристикой. Например, цвет кнопки, текст заголовка, изображение.</p>"
+            },
+            {
+                frontTitle: "Применение A/B теста",
+                frontEnglishTerm: "Application",
+                frontContent: "Когда чаще всего используют классический A/B тест?",
+                backTitle: "Сценарии",
+                backContent: "<ul><li>Тестирование заголовков, подзаголовков.</li><li>Изменение текста или цвета кнопок призыва к действию (CTA).</li><li>Тестирование изображений или видео.</li><li>Проверка различных формулировок в описаниях.</li><li>Оптимизация полей форм.</li></ul>"
+            },
+            {
+                frontTitle: "Формула: Коэффициент Конверсии",
+                frontEnglishTerm: "Conversion Rate (CR)",
+                frontContent: "Как рассчитать основную метрику A/B теста?",
+                backTitle: "Расчет",
+                backContent: "<p>Процент пользователей, выполнивших целевое действие.</p><div class='formula'>CR = (Кол-во конверсий / Кол-во посетителей варианта) * 100%</div><p>Пример: Если из 1000 посетителей варианта B 50 совершили покупку, CR = (50/1000)*100% = 5%.</p>"
+            },
+
+            // 6-10: A/B/n тест
+            {
+                frontTitle: "A/B/n тест",
+                frontEnglishTerm: "A/B/n Testing",
+                frontContent: "Что означает 'n' в названии этого теста?",
+                backTitle: "Суть и применение",
+                backContent: "<p>Расширение A/B теста, где сравнивается не два, а несколько (n) вариантов одного элемента или страницы с контрольной версией. Например, A/B/C/D тест.</p><p><b>Когда применять:</b> Когда есть несколько конкурирующих идей для одного элемента и хочется быстро сравнить их все.</p>"
+            },
+            {
+                frontTitle: "Особенность A/B/n теста",
+                frontEnglishTerm: "Key Feature",
+                frontContent: "Чем он полезен по сравнению с серией A/B тестов?",
+                backTitle: "Эффективность",
+                backContent: "<p>Позволяет одновременно протестировать несколько гипотез, экономя время. Однако требует больше трафика для достижения статистической значимости для каждого варианта.</p>"
+            },
+            {
+                frontTitle: "Различия вариантов в A/B/n",
+                frontEnglishTerm: "Variation Differences",
+                frontContent: "Как отличаются варианты C, D от A и B?",
+                backTitle: "Отличия",
+                backContent: "<p>Каждый вариант (B, C, D, ...) представляет собой одну альтернативу контролю (A) по тестируемому элементу. Например, кнопка: A - синяя, B - зеленая, C - красная, D - оранжевая.</p>"
+            },
+            {
+                frontTitle: "Применение A/B/n теста",
+                frontEnglishTerm: "Application",
+                frontContent: "В каких ситуациях он особенно полезен?",
+                backTitle: "Сценарии",
+                backContent: "<ul><li>Тестирование нескольких вариантов заголовков для статьи или лендинга.</li><li>Сравнение разных изображений для карточки товара.</li><li>Выбор лучшего из нескольких вариантов CTA.</li><li>Оптимизация промо-баннеров с разными предложениями.</li></ul>"
+            },
+            {
+                frontTitle: "Распределение трафика в A/B/n",
+                frontEnglishTerm: "Traffic Allocation",
+                frontContent: "Как делится трафик между вариантами?",
+                backTitle: "Механизм",
+                backContent: "<p>Трафик обычно делится поровну между всеми вариантами (включая контрольный A). Если 4 варианта (A, B, C, D), каждый получит примерно по 25% трафика.</p>"
+            },
+
+            // 11-15: Сплит-тест URL
+            {
+                frontTitle: "Сплит-тест URL",
+                frontEnglishTerm: "Split URL Test / Redirect Test",
+                frontContent: "В чем его основное отличие от классического A/B теста?",
+                backTitle: "Суть и применение",
+                backContent: "<p>Тестируются две (или более) совершенно разные версии страницы, размещенные на РАЗНЫХ URL-адресах. Пользователи случайным образом перенаправляются на один из этих URL.</p><p><b>Когда применять:</b> Для тестирования радикальных изменений в дизайне, структуре страницы, пользовательских сценариях. Например, полный редизайн страницы.</p>"
+            },
+            {
+                frontTitle: "Особенность Сплит URL теста",
+                frontEnglishTerm: "Key Feature",
+                frontContent: "Почему варианты на разных URL?",
+                backTitle: "Техническая необходимость",
+                backContent: "<p>Используется, когда изменения настолько значительны, что их сложно или невозможно реализовать путем модификации одной и той же страницы на стороне клиента или сервера. Например, разные бэкэнд-технологии для вариантов.</p>"
+            },
+            {
+                frontTitle: "Различия вариантов в Сплит URL",
+                frontEnglishTerm: "Variation Differences",
+                frontContent: "Насколько могут отличаться страницы?",
+                backTitle: "Масштаб изменений",
+                backContent: "<p>Страницы могут кардинально отличаться по дизайну, контенту, структуре, функциональности. Тестируется общее впечатление и эффективность совершенно разных подходов.</p>"
+            },
+            {
+                frontTitle: "Применение Сплит URL теста",
+                frontEnglishTerm: "Application",
+                frontContent: "Для каких задач он идеален?",
+                backTitle: "Сценарии",
+                backContent: "<ul><li>Полный редизайн веб-страницы или сайта.</li><li>Тестирование разных пользовательских путей (user flows).</li><li>Сравнение страниц, построенных на разных технологических платформах.</li><li>Проверка эффективности совершенно новой концепции страницы.</li></ul>"
+            },
+            {
+                frontTitle: "SEO и Сплит URL тест",
+                frontEnglishTerm: "SEO Considerations",
+                frontContent: "Как такой тест влияет на поисковую оптимизацию?",
+                backTitle: "Рекомендации",
+                backContent: "<p>Важно правильно настроить атрибут `rel=\"canonical\"` на вариантах страниц (указывающий на основную версию) и использовать HTTP-ответ `302 Found` (временный редирект) для перенаправления трафика, чтобы избежать проблем с дублированием контента и потерей SEO-рейтинга.</p>"
+            },
+
+            // 16-20: Многовариантный тест (MVT)
+            {
+                frontTitle: "Многовариантный тест",
+                frontEnglishTerm: "Multivariate Test (MVT)",
+                frontContent: "Что тестируется в MVT?",
+                backTitle: "Суть и применение",
+                backContent: "<p>Одновременное тестирование ИЗМЕНЕНИЙ НЕСКОЛЬКИХ ЭЛЕМЕНТОВ на одной странице, чтобы выявить, какая КОМБИНАЦИЯ этих изменений дает наилучший результат.</p><p><b>Когда применять:</b> Когда есть гипотезы по нескольким элементам на странице и важно понять их взаимное влияние (эффект взаимодействия).</p>"
+            },
+            {
+                frontTitle: "Особенность MVT",
+                frontEnglishTerm: "Key Feature",
+                frontContent: "Чем MVT отличается от нескольких A/B тестов?",
+                backTitle: "Комбинации и взаимодействия",
+                backContent: "<p>MVT проверяет не просто отдельные изменения, а все возможные комбинации этих изменений. Это позволяет выявить синергетический или антагонистический эффект от одновременного изменения нескольких элементов.</p>"
+            },
+            {
+                frontTitle: "Пример MVT",
+                frontEnglishTerm: "MVT Example",
+                frontContent: "Как это работает на практике?",
+                backTitle: "Иллюстрация",
+                backContent: "<p>Допустим, тестируем: <br>1. Заголовок (2 варианта: H1, H2) <br>2. Кнопка CTA (2 варианта: C1, C2). <br>MVT создаст 2x2=4 комбинации: (H1+C1), (H1+C2), (H2+C1), (H2+C2). Каждая комбинация показывается своей группе пользователей.</p>"
+            },
+            {
+                frontTitle: "Применение MVT",
+                frontEnglishTerm: "Application",
+                frontContent: "Когда MVT предпочтительнее A/B?",
+                backTitle: "Сценарии",
+                backContent: "<ul><li>Оптимизация лендинговых страниц с несколькими ключевыми элементами (заголовок, изображение, CTA, форма).</li><li>Тестирование различных комбинаций фильтров или опций в каталоге товаров.</li><li>Поиск оптимального сочетания элементов в email-рассылке.</li></ul><p><b>Требует много трафика!</b></p>"
+            },
+            {
+                frontTitle: "Формула: Количество комбинаций в MVT",
+                frontEnglishTerm: "Number of Variations in MVT",
+                frontContent: "Как рассчитать общее число вариантов?",
+                backTitle: "Расчет",
+                backContent: "<p>Если есть N элементов, и для каждого элемента L<sub>i</sub> вариантов:</p><div class='formula'>Общее кол-во вариантов = L<sub>1</sub> * L<sub>2</sub> * ... * L<sub>N</sub></div><p>Пример: 3 элемента, 1-й - 2 варианта, 2-й - 3 варианта, 3-й - 2 варианта. Итого: 2 * 3 * 2 = 12 комбинаций (вариантов).</p>"
+            },
+
+            // 21-25: Многостраничный тест
+            {
+                frontTitle: "Многостраничный тест",
+                frontEnglishTerm: "Multipage Test / Funnel Testing",
+                frontContent: "Что является объектом этого теста?",
+                backTitle: "Суть и применение",
+                backContent: "<p>Тестирование изменений, которые затрагивают ПОСЛЕДОВАТЕЛЬНОСТЬ страниц в воронке продаж или пользовательском пути (например, процесс оформления заказа, регистрация). Цель - улучшить конверсию всей воронки.</p><p><b>Когда применять:</b> Для оптимизации ключевых пользовательских сценариев, состоящих из нескольких шагов/страниц.</p>"
+            },
+            {
+                frontTitle: "Особенность Многостраничного теста",
+                frontEnglishTerm: "Key Feature",
+                frontContent: "Почему важно поддерживать консистентность?",
+                backTitle: "Консистентность опыта",
+                backContent: "<p>Пользователь, попавший в определенный вариант (A или B) на первом шаге воронки, должен видеть соответствующие этому варианту страницы на ВСЕХ последующих шагах этой воронки. Это обеспечивает чистоту эксперимента.</p>"
+            },
+            {
+                frontTitle: "Пример Многостраничного теста",
+                frontEnglishTerm: "Multipage Test Example",
+                frontContent: "Как это выглядит?",
+                backTitle: "Иллюстрация",
+                backContent: "<p>Тестируем новый процесс оформления заказа: <br><b>Вариант A (контроль):</b> Шаг1_A -> Шаг2_A -> Шаг3_A <br><b>Вариант B (тест):</b> Шаг1_B -> Шаг2_B -> Шаг3_B <br>Изменения в Варианте B могут быть на всех шагах или только на некоторых, но пользователь видит только 'свой' набор страниц.</p>"
+            },
+            {
+                frontTitle: "Применение Многостраничного теста",
+                frontEnglishTerm: "Application",
+                frontContent: "Для каких воронок он подходит?",
+                backTitle: "Сценарии",
+                backContent: "<ul><li>Оптимизация процесса регистрации (например, разбить на шаги или упростить).</li><li>Улучшение воронки оформления заказа в интернет-магазине.</li><li>Тестирование разных подходов к онбордингу новых пользователей.</li><li>Изменение последовательности или содержания шагов в формах заявки.</li></ul>"
+            },
+            {
+                frontTitle: "Отличие от серии A/B тестов на каждой странице",
+                frontEnglishTerm: "Difference from Sequential A/B Tests",
+                frontContent: "В чем ключевое различие?",
+                backTitle: "Целостность опыта",
+                backContent: "<p>Многостраничный тест оценивает ВЛИЯНИЕ СКВОЗНЫХ изменений на всю воронку. Отдельные A/B тесты на каждой странице не покажут кумулятивный эффект или как изменение на одной странице влияет на последующие шаги в рамках целостного опыта пользователя.</p>"
+            },
+
+            // 26-30: Клиентский vs Серверный A/B тест
+            {
+                frontTitle: "Клиентский A/B тест",
+                frontEnglishTerm: "Client-Side A/B Testing",
+                frontContent: "Где происходят изменения в этом типе теста?",
+                backTitle: "Механизм",
+                backContent: "<p>Изменения на веб-странице для разных вариантов теста применяются непосредственно в БРАУЗЕРЕ пользователя с помощью JavaScript. Оригинальная страница загружается с сервера, а затем JS-код модифицирует ее для отображения варианта B.</p>"
+            },
+            {
+                frontTitle: "Преимущества Клиентского A/B теста",
+                frontEnglishTerm: "Client-Side Pros",
+                frontContent: "Какие у него плюсы?",
+                backTitle: "Плюсы",
+                backContent: "<ul><li>Относительно простая и быстрая настройка, часто не требует участия разработчиков бэкенда.</li><li>Многие популярные A/B платформы (например, Google Optimize (ранее), Optimizely, VWO) работают по этому принципу.</li><li>Хорошо подходит для тестирования визуальных изменений, текста, порядка элементов.</li></ul>"
+            },
+            {
+                frontTitle: "Недостатки Клиентского A/B теста",
+                frontEnglishTerm: "Client-Side Cons",
+                frontContent: "Какие у него минусы?",
+                backTitle: "Минусы",
+                backContent: "<ul><li>Эффект 'мерцания' (flicker effect / FOUC): пользователь может на мгновение увидеть оригинальную страницу перед тем, как JS применит изменения.</li><li>Может незначительно замедлять загрузку страницы.</li><li>Ограниченные возможности для тестирования глубоких изменений в логике или функциональности, зависящей от бэкенда.</li></ul>"
+            },
+            {
+                frontTitle: "Серверный A/B тест",
+                frontEnglishTerm: "Server-Side A/B Testing",
+                frontContent: "Где формируются варианты в этом случае?",
+                backTitle: "Механизм",
+                backContent: "<p>Решение о том, какой вариант (A или B) показать пользователю, принимается на СЕРВЕРЕ еще ДО того, как страница будет отправлена в браузер. Браузер сразу получает готовую версию страницы (A или B).</p>"
+            },
+            {
+                frontTitle: "Преимущества Серверного A/B теста",
+                frontEnglishTerm: "Server-Side Pros",
+                frontContent: "Какие у него сильные стороны?",
+                backTitle: "Плюсы",
+                backContent: "<ul><li>Отсутствие 'мерцания', так как браузер получает финальную версию.</li><li>Возможность тестировать сложные изменения в логике приложения, алгоритмах, ценообразовании, API.</li><li>Лучшая производительность, так как нет дополнительного JS на клиенте для модификации DOM.</li><li>Подходит для тестирования на мобильных приложениях, IoT и других платформах, где клиентский JS не применим.</li></ul>"
+            },
+            // 31-35: Особенности и различия
+            {
+                frontTitle: "Когда выбрать Клиентский тест?",
+                frontEnglishTerm: "When to use Client-Side?",
+                frontContent: "Идеальные условия для клиентского подхода.",
+                backTitle: "Рекомендации",
+                backContent: "<p>Когда нужно быстро протестировать изменения фронтенда: тексты, цвета, изображения, расположение элементов. Если у вас нет ресурсов для серверной разработки или вы используете WYSIWYG-редакторы A/B платформ.</p>"
+            },
+            {
+                frontTitle: "Когда выбрать Серверный тест?",
+                frontEnglishTerm: "When to use Server-Side?",
+                frontContent: "Идеальные условия для серверного подхода.",
+                backTitle: "Рекомендации",
+                backContent: "<p>Для сложных тестов, затрагивающих бэкенд-логику, алгоритмы персонализации, производительность, новые функции. Когда критично отсутствие мерцания. Для омниканального тестирования.</p>"
+            },
+            {
+                frontTitle: "A/B тест vs MVT: Трафик",
+                frontEnglishTerm: "A/B vs MVT: Traffic",
+                frontContent: "Какой тест требует больше посетителей?",
+                backTitle: "Требования к трафику",
+                backContent: "<p>Многовариантный тест (MVT) требует ЗНАЧИТЕЛЬНО больше трафика, чем A/B тест, так как трафик делится между всеми возможными комбинациями изменений. Каждая комбинация должна набрать достаточно данных для статистической значимости.</p>"
+            },
+            {
+                frontTitle: "A/B тест vs MVT: Цель",
+                frontEnglishTerm: "A/B vs MVT: Goal",
+                frontContent: "Какую задачу решает каждый из них лучше?",
+                backTitle: "Фокус",
+                backContent: "<p><b>A/B тест:</b> Определить, какое ИЗ ОДНОГО конкретного изменения лучше (например, синяя кнопка или зеленая).</p><p><b>MVT:</b> Найти наилучшую КОМБИНАЦИЮ из нескольких изменений и понять их ВЗАИМНОЕ ВЛИЯНИЕ (например, какой заголовок лучше работает с какой кнопкой).</p>"
+            },
+            {
+                frontTitle: "Сложность настройки: Клиентский vs Серверный",
+                frontEnglishTerm: "Setup Complexity: Client-Side vs Server-Side",
+                frontContent: "Какой подход сложнее реализовать?",
+                backTitle: "Сложность",
+                backContent: "<p><b>Клиентский:</b> Обычно проще и быстрее настраивается, особенно с использованием готовых платформ. Может выполняться маркетологами.</p><p><b>Серверный:</b> Требует участия разработчиков для изменения кода на стороне сервера. Более трудоемкий, но гибкий.</p>"
+            },
+
+            // 36-45: Байесовский подход - Основы
+            {
+                frontTitle: "Байесовский A/B тест: Основной принцип",
+                frontEnglishTerm: "Bayesian A/B Testing: Core Principle",
+                frontContent: "На чем основан байесовский подход?",
+                backTitle: "Теорема Байеса",
+                backContent: "<p>Байесовский подход использует теорему Байеса для обновления вероятности гипотезы по мере поступления новых данных (наблюдений). Вместо p-value он дает прямые вероятностные утверждения о том, какой вариант лучше.</p>"
+            },
+            {
+                frontTitle: "Отличие Байеса от Частотного подхода",
+                frontEnglishTerm: "Bayesian vs Frequentist Approach",
+                frontContent: "В чем ключевое различие в интерпретации?",
+                backTitle: "Интерпретация результатов",
+                backContent: "<p><b>Частотный:</b> Говорит о вероятности НАБЛЮДАЕМЫХ ДАННЫХ, если бы нулевая гипотеза (нет разницы) была верна (p-value). Требует фиксации размера выборки до начала теста.</p><p><b>Байесовский:</b> Говорит о ВЕРОЯТНОСТИ того, что вариант B действительно лучше варианта A, или какова вероятность, что улучшение (lift) находится в определенном диапазоне. Позволяет обновлять убеждения по ходу теста.</p>"
+            },
+            {
+                frontTitle: "Априорная вероятность",
+                frontEnglishTerm: "Prior Probability",
+                frontContent: "Что это в байесовском тесте?",
+                backTitle: "Начальные убеждения",
+                backContent: "<p>Это наши первоначальные предположения или убеждения о вероятности того или иного исхода (например, какой может быть конверсия варианта) ДО начала сбора данных. Может быть основана на предыдущих тестах или экспертном мнении.</p>"
+            },
+            {
+                frontTitle: "Апостериорная вероятность",
+                frontEnglishTerm: "Posterior Probability",
+                frontContent: "Что она показывает?",
+                backTitle: "Обновленные убеждения",
+                backContent: "<p>Это обновленная вероятность гипотезы ПОСЛЕ учета наблюдаемых данных. Апостериорная вероятность = Априорная вероятность + Данные теста.</p>"
+            },
+            {
+                frontTitle: "Вероятность того, что B лучше A",
+                frontEnglishTerm: "Probability B beats A (P(B>A))",
+                frontContent: "Что означает эта метрика в байесовском тесте?",
+                backTitle: "Прямая интерпретация",
+                backContent: "<p>Это одна из ключевых метрик байесовского A/B теста. Она напрямую показывает вероятность (например, 92%) того, что вариант B имеет более высокую истинную конверсию (или другую целевую метрику), чем вариант A. Интуитивно понятна.</p>"
+            },
+            {
+                frontTitle: "Интерпретация 'P(B>A) = 95%'",
+                frontEnglishTerm: "Interpreting P(B>A) = 95%",
+                frontContent: "Как понимать это значение?",
+                backTitle: "Смысл",
+                backContent: "<p>Если вероятность того, что B лучше A, составляет 95%, это означает, что мы на 95% уверены, что вариант B превосходит вариант A. Это позволяет принимать решения с определенной степенью уверенности.</p>"
+            },
+            {
+                frontTitle: "Ожидаемые потери (Expected Loss)",
+                frontEnglishTerm: "Expected Loss",
+                frontContent: "Что это за концепция в байесовском принятии решений?",
+                backTitle: "Риск ошибки",
+                backContent: "<p>Это средняя величина потерь (например, в конверсии или доходе), которые мы понесем, если выберем вариант, который на самом деле НЕ является лучшим. Помогает принять решение: если ожидаемые потери от выбора B (если A лучше) малы, то можно выбрать B.</p>"
+            },
+            {
+                frontTitle: "Порог для Expected Loss",
+                frontEnglishTerm: "Expected Loss Threshold",
+                frontContent: "Как его использовать для принятия решения?",
+                backTitle: "Критерий решения",
+                backContent: "<p>Мы можем заранее установить приемлемый порог ожидаемых потерь. Если Expected Loss для худшего варианта ниже этого порога, мы можем остановить тест и выбрать вариант с наилучшей текущей оценкой.</p>"
+            },
+            {
+                frontTitle: "Преимущество Байеса: Интерпретируемость",
+                frontEnglishTerm: "Bayesian Advantage: Interpretability",
+                frontContent: "Почему байесовские результаты понятнее?",
+                backTitle: "Прямые вероятности",
+                backContent: "<p>Байесовский подход дает прямые вероятностные ответы на интересующие вопросы ('Какова вероятность, что В лучше А?'), что более интуитивно понятно для бизнеса, чем косвенные выводы через p-value.</p>"
+            },
+            {
+                frontTitle: "Преимущество Байеса: Ранняя остановка",
+                frontEnglishTerm: "Bayesian Advantage: Early Stopping",
+                frontContent: "Можно ли останавливать тест раньше?",
+                backTitle: "Гибкость",
+                backContent: "<p>Да, байесовские методы позволяют анализировать результаты и принимать решения в любой момент теста без увеличения риска ошибки (в отличие от 'подглядывания' в частотном подходе). Можно остановить тест, как только будет достаточно уверенности (например, P(B>A) > 95% или Expected Loss < порога).</p>"
+            },
+
+            // 46-55: Байесовские тесты - Виды и применение
+            {
+                frontTitle: "Байесовский A/B тест (стандартный)",
+                frontEnglishTerm: "Standard Bayesian A/B Test",
+                frontContent: "Как он обычно реализуется?",
+                backTitle: "Реализация",
+                backContent: "<p>Используются сопряженные априорные распределения (например, Бета-распределение для конверсий) для простоты расчетов апостериорных распределений. Позволяет вычислить P(B>A) и распределение возможного улучшения (lift).</p>"
+            },
+            {
+                frontTitle: "Когда Байесовский подход предпочтительнее?",
+                frontEnglishTerm: "When is Bayesian preferred?",
+                frontContent: "В каких ситуациях он дает больше преимуществ?",
+                backTitle: "Сценарии",
+                backContent: "<ul><li>При малых размерах выборок (хотя и не панацея).</li><li>Когда важна интуитивная понятность результатов для бизнеса.</li><li>Когда нужна возможность принимать решения гибко, не дожидаясь фиксированного размера выборки.</li><li>Для тестов с высоким риском или высокой потенциальной выгодой, где важна оценка ожидаемых потерь.</li></ul>"
+            },
+            {
+                frontTitle: "Многорукий бандит (Multi-Armed Bandit - MAB)",
+                frontEnglishTerm: "Multi-Armed Bandit",
+                frontContent: "Это вид байесовского теста?",
+                backTitle: "Суть и применение",
+                backContent: "<p>Да, это подход, часто использующий байесовские принципы. MAB динамически распределяет больше трафика варианту, который показывает себя лучше по ходу теста, минимизируя 'сожаление' (потери от показа худших вариантов). Сочетает исследование (exploration) и использование (exploitation).</p>"
+            },
+            {
+                frontTitle: "MAB: Исследование vs Использование",
+                frontEnglishTerm: "MAB: Exploration vs Exploitation",
+                frontContent: "В чем баланс?",
+                backTitle: "Дилемма",
+                backContent: "<p><b>Исследование (Exploration):</b> Направление трафика на все варианты (включая потенциально худшие), чтобы собрать больше информации о них.</p><p><b>Использование (Exploitation):</b> Направление трафика на вариант, который на данный момент считается лучшим, чтобы максимизировать текущую выгоду.</p><p>MAB-алгоритмы ищут оптимальный баланс.</p>"
+            },
+            {
+                frontTitle: "Алгоритмы MAB",
+                frontEnglishTerm: "MAB Algorithms",
+                frontContent: "Какие бывают?",
+                backTitle: "Примеры",
+                backContent: "<ul><li><b>Epsilon-Greedy:</b> Большую часть времени (1-ε) выбирает лучший вариант, малую часть (ε) – случайный для исследования.</li><li><b>Thompson Sampling (Байесовский бандит):</b> Выбирает вариант пропорционально вероятности того, что он является лучшим (на основе апостериорного распределения).</li><li><b>UCB (Upper Confidence Bound):</b> Учитывает не только текущую оценку, но и неопределенность этой оценки.</li></ul>"
+            },
+            {
+                frontTitle: "Применение MAB",
+                frontEnglishTerm: "MAB Application",
+                frontContent: "Когда MAB особенно полезен?",
+                backTitle: "Сценарии",
+                backContent: "<ul><li>Оптимизация заголовков новостей или статей в реальном времени.</li><li>Автоматическая оптимизация рекламных креативов.</li><li>Персонализация контента или предложений.</li><li>Тестирование с коротким жизненным циклом (например, сезонные акции), где нужно быстро найти победителя.</li></ul>"
+            },
+            {
+                frontTitle: "MAB vs Классический A/B",
+                frontEnglishTerm: "MAB vs Classic A/B",
+                frontContent: "В чем основное различие в цели?",
+                backTitle: "Цель",
+                backContent: "<p><b>Классический A/B:</b> Основная цель - обучение, получение статистически достоверного вывода о том, какой вариант лучше в целом.</p><p><b>MAB:</b> Основная цель - максимизация общей выгоды (конверсий) В ТЕЧЕНИЕ самого теста, путем перераспределения трафика к лидерам.</p>"
+            },
+            {
+                frontTitle: "Недостатки MAB",
+                frontEnglishTerm: "MAB Downsides",
+                frontContent: "Есть ли у него минусы?",
+                backTitle: "Ограничения",
+                backContent: "<p>Может преждевременно 'схлопнуться' к локальному оптимуму, если один вариант случайно покажет хорошие результаты вначале. Менее подходит, если главная цель - глубокое понимание и точное измерение эффекта каждого варианта (для этого лучше классический A/B или байесовский A/B с равным сплитом).</p>"
+            },
+            {
+                frontTitle: "Байесовский A/B тест и сегментация",
+                frontEnglishTerm: "Bayesian A/B Testing and Segmentation",
+                frontContent: "Можно ли применять к сегментам?",
+                backTitle: "Возможности",
+                backContent: "<p>Да, байесовский анализ можно применять к различным сегментам аудитории так же, как и частотный. Это позволяет оценить вероятность превосходства варианта B над A для каждого конкретного сегмента.</p>"
+            },
+            {
+                frontTitle: "Инструменты для Байесовских тестов",
+                frontEnglishTerm: "Tools for Bayesian Tests",
+                frontContent: "Существуют ли готовые решения?",
+                backTitle: "Платформы и библиотеки",
+                backContent: "<p>Некоторые A/B платформы предлагают байесовские методы (например, VWO, Optimizely в некоторых аспектах). Также существуют специализированные калькуляторы и библиотеки на Python (например, `pymc3`, `numpyro`) или R для проведения байесовского анализа.</p>"
+            },
+
+            // 56-65: Формулы и Расчеты (простое объяснение)
+            {
+                frontTitle: "Формула: Подъем",
+                frontEnglishTerm: "Lift / Uplift",
+                frontContent: "Как рассчитать относительное улучшение?",
+                backTitle: "Расчет",
+                backContent: "<p>Показывает, на сколько процентов вариант B лучше (или хуже) варианта A.</p><div class='formula'>Lift = ((CR<sub>B</sub> - CR<sub>A</sub>) / CR<sub>A</sub>) * 100%</div><p>CR<sub>B</sub> - конверсия варианта B, CR<sub>A</sub> - конверсия варианта A.<br>Пример: CR<sub>A</sub>=4%, CR<sub>B</sub>=5%. Lift = ((5-4)/4)*100% = 25%.</p>"
+            },
+            {
+                frontTitle: "Концепция: Статистическая Значимость",
+                frontEnglishTerm: "Statistical Significance (Concept)",
+                frontContent: "Что это означает простыми словами (в частотном подходе)?",
+                backTitle: "Смысл",
+                backContent: "<p>Это мера уверенности в том, что наблюдаемая разница между вариантами не случайна, а реальна. Если результат 'статистически значим', это значит, что маловероятно получить такую разницу просто из-за случайности выборки.</p>"
+            },
+            {
+                frontTitle: "Концепция: P-value (p-значение)",
+                frontEnglishTerm: "P-value (Concept)",
+                frontContent: "Что оно показывает (в частотном подходе)?",
+                backTitle: "Смысл",
+                backContent: "<p>Это вероятность получить наблюдаемые (или еще более выраженные) результаты, ЕСЛИ ПРЕДПОЛОЖИТЬ, что между вариантами НЕТ реальной разницы (нулевая гипотеза верна). <br>Если p-value < 0.05 (обычный порог), результат считают статистически значимым.</p><p><b>Важно:</b> P-value НЕ является вероятностью того, что вариант B лучше варианта A.</p>"
+            },
+            {
+                frontTitle: "Концепция: Доверительный интервал",
+                frontEnglishTerm: "Confidence Interval (Concept)",
+                frontContent: "Что он показывает для метрики (например, конверсии)?",
+                backTitle: "Диапазон значений",
+                backContent: "<p>Это диапазон, в котором, с определенной степенью уверенности (например, 95%), находится ИСТИННОЕ значение метрики (например, истинный коэффициент конверсии варианта). <br>Если доверительные интервалы для CR<sub>A</sub> и CR<sub>B</sub> не пересекаются, это часто указывает на статистически значимую разницу.</p>"
+            },
+            {
+                frontTitle: "Факторы, влияющие на Размер Выборки",
+                frontEnglishTerm: "Sample Size Factors",
+                frontContent: "От чего зависит необходимое количество участников теста?",
+                backTitle: "Ключевые факторы",
+                backContent: "<ul><li><b>Базовая конверсия (Baseline CR):</b> Чем она ниже, тем больше выборка.</li><li><b>Ожидаемый подъем (MDE - Minimum Detectable Effect):</b> Чем меньший эффект вы хотите обнаружить, тем больше выборка.</li><li><b>Статистическая значимость (α):</b> Обычно 0.05.</li><li><b>Статистическая мощность (1-β):</b> Обычно 0.8 (80%).</li><li><b>Количество вариантов:</b> Больше вариантов - больше общая выборка.</li></ul>"
+            },
+            {
+                frontTitle: "MDE (Минимально обнаруживаемый эффект)",
+                frontEnglishTerm: "Minimum Detectable Effect (MDE)",
+                frontContent: "Почему важно определить MDE до теста?",
+                backTitle: "Планирование",
+                backContent: "<p>MDE - это наименьшее изменение в метрике, которое вы считаете практически значимым для бизнеса и хотите, чтобы тест смог его обнаружить. Если реальное улучшение меньше MDE, тест может его не заметить (ошибка II рода). MDE влияет на расчет размера выборки.</p>"
+            },
+            {
+                frontTitle: "Статистическая Мощность (просто)",
+                frontEnglishTerm: "Statistical Power (Simple)",
+                frontContent: "Что это за параметр теста?",
+                backTitle: "Вероятность успеха теста",
+                backContent: "<p>Это вероятность того, что ваш тест ПРАВИЛЬНО обнаружит реальную разницу между вариантами, ЕСЛИ она действительно существует. Обычно стремятся к мощности 80% (т.е.  probabilidad 80% не пропустить существующий эффект).</p><p>Низкая мощность = высокий риск пропустить выигрышный вариант (False Negative).</p>"
+            },
+            {
+                frontTitle: "Формула: Длительность теста (примерно)",
+                frontEnglishTerm: "Test Duration (Roughly)",
+                frontContent: "Как оценить, сколько времени займет тест?",
+                backTitle: "Расчет",
+                backContent: "<p>Определяется необходимой выборкой и среднесуточным трафиком.</p><div class='formula'>Длительность (дни) = Общий размер выборки / Средний дневной трафик на страницу</div><p>Также важно учитывать бизнес-циклы (например, проводить тест не менее 1-2 полных недель).</p>"
+            },
+            {
+                frontTitle: "Ошибка I рода (False Positive)",
+                frontEnglishTerm: "Type I Error",
+                frontContent: "Что это за ошибка в статистике?",
+                backTitle: "Ложная тревога",
+                backContent: "<p>Это когда вы заключаете, что есть разница между вариантами (например, B лучше A), хотя на самом деле ее нет (нулевая гипотеза верна). Вероятность этой ошибки равна уровню значимости α (альфа), обычно 5%.</p>"
+            },
+            {
+                frontTitle: "Ошибка II рода (False Negative)",
+                frontEnglishTerm: "Type II Error",
+                frontContent: "А это что за ошибка?",
+                backTitle: "Пропуск эффекта",
+                backContent: "<p>Это когда вы заключаете, что разницы между вариантами нет, хотя на самом деле она есть (вариант B действительно лучше A). Вероятность этой ошибки обозначается β (бета). Статистическая мощность = 1 - β.</p>"
+            },
+            // 66-75: Сравнение и выбор типа теста
+            {
+                frontTitle: "Выбор теста: 1 элемент, 2 версии",
+                frontEnglishTerm: "Test Choice: 1 Element, 2 Versions",
+                frontContent: "Какой тест выбрать для простой гипотезы?",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Классический A/B тест.</b> Идеально для проверки влияния одного конкретного изменения (например, цвет кнопки, текст заголовка).</p>"
+            },
+            {
+                frontTitle: "Выбор теста: 1 элемент, 3+ версии",
+                frontEnglishTerm: "Test Choice: 1 Element, 3+ Versions",
+                frontContent: "Если есть несколько идей для одного элемента?",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>A/B/n тест.</b> Позволяет сравнить несколько вариантов одного элемента одновременно с контролем.</p>"
+            },
+            {
+                frontTitle: "Выбор теста: Радикальный редизайн страницы",
+                frontEnglishTerm: "Test Choice: Radical Page Redesign",
+                frontContent: "Как протестировать совершенно новый дизайн?",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Сплит-тест URL (Split URL Test).</b> Используйте, когда варианты страницы настолько разные, что размещаются на отдельных URL.</p>"
+            },
+            {
+                frontTitle: "Выбор теста: Взаимодействие нескольких элементов",
+                frontEnglishTerm: "Test Choice: Interaction of Multiple Elements",
+                frontContent: "Хотим проверить комбинации изменений.",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Многовариантный тест (MVT).</b> Поможет найти лучшую комбинацию изменений и понять, как разные элементы влияют друг на друга. Требует много трафика.</p>"
+            },
+            {
+                frontTitle: "Выбор теста: Оптимизация воронки из 3 шагов",
+                frontEnglishTerm: "Test Choice: 3-Step Funnel Optimization",
+                frontContent: "Нужно улучшить весь процесс оформления заказа.",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Многостраничный тест (Multipage Test).</b> Обеспечивает консистентный опыт для пользователя на всех шагах воронки и тестирует сквозные изменения.</p>"
+            },
+            {
+                frontTitle: "Выбор теста: Быстрые изменения на фронтенде",
+                frontEnglishTerm: "Test Choice: Quick Frontend Changes",
+                frontContent: "Нужно протестировать текст кнопки без разработчика.",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Клиентский A/B тест (Client-Side).</b> Легко настраивается с помощью JS-инструментов, подходит для визуальных правок.</p>"
+            },
+            {
+                frontTitle: "Выбор теста: Тестирование нового алгоритма цен",
+                frontEnglishTerm: "Test Choice: Testing New Pricing Algorithm",
+                frontContent: "Изменения в логике на сервере.",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Серверный A/B тест (Server-Side).</b> Позволяет тестировать изменения в бэкенде, не вызывает 'мерцания', более надежен для сложных тестов.</p>"
+            },
+            {
+                frontTitle: "Выбор теста: Максимизация дохода от рекламы в реальном времени",
+                frontEnglishTerm: "Test Choice: Real-time Ad Revenue Maximization",
+                frontContent: "Нужно постоянно показывать лучший креатив.",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Многорукий бандит (Multi-Armed Bandit - MAB).</b> Динамически перераспределяет трафик на самый эффективный вариант, оптимизируя результат по ходу теста.</p>"
+            },
+            {
+                frontTitle: "Выбор теста: Мало трафика, но нужно решение",
+                frontEnglishTerm: "Test Choice: Low Traffic, Need a Decision",
+                frontContent: "Классический тест не набирает значимость.",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Байесовский A/B тест.</b> Может дать полезные вероятностные выводы даже при меньшем объеме данных, позволяет оценить 'вероятность быть лучше' и 'ожидаемые потери', помогая принять решение.</p>"
+            },
+            {
+                frontTitle: "Выбор теста: Нужно глубокое понимание, почему вариант лучше",
+                frontEnglishTerm: "Test Choice: Deep Understanding of Why",
+                frontContent: "Не просто найти победителя, а понять причины.",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Классический A/B тест с последующей сегментацией и анализом поведения.</b> Байесовский тест также может помочь, но для 'почему' часто нужен качественный анализ поверх количественных данных.</p>"
+            },
+            // 76-85: Продвинутые аспекты и частые ошибки
+            {
+                frontTitle: "Эффект взаимодействия (Interaction Effect)",
+                frontEnglishTerm: "Interaction Effect",
+                frontContent: "Что это, и когда его учитывать?",
+                backTitle: "Суть",
+                backContent: "<p>Возникает, когда эффект одного изменения зависит от наличия другого изменения. Например, красный цвет кнопки хорошо работает с одним заголовком, но плохо с другим. MVT помогает выявить такие эффекты.</p>"
+            },
+            {
+                frontTitle: "Проблема множественных сравнений",
+                frontEnglishTerm: "Multiple Comparisons Problem",
+                frontContent: "В чем риск при тестировании многих вариантов/метрик?",
+                backTitle: "Риск",
+                backContent: "<p>Чем больше вариантов или метрик вы одновременно сравниваете, тем выше вероятность получить ложноположительный результат (ошибка I рода) просто случайно. Требуются поправки (например, Бонферрони) или байесовский подход, который менее подвержен этой проблеме при правильном применении.</p>"
+            },
+            {
+                frontTitle: "A/A тест: Зачем нужен?",
+                frontEnglishTerm: "A/A Test: Purpose",
+                frontContent: "Тестирование двух одинаковых версий.",
+                backTitle: "Цели",
+                backContent: "<ul><li><b>Проверка инструмента:</b> Убедиться, что система A/B тестирования работает корректно и делит трафик случайным образом без систематических ошибок.</li><li><b>Определение базовой вариабельности:</b> Понять, насколько естественным образом колеблется метрика без каких-либо изменений.</li><li><b>Установка порогов:</b> Иногда помогает определить, какой уровень 'случайной' разницы считать шумом.</li></ul>"
+            },
+            {
+                frontTitle: "Регрессия к среднему (в тестах)",
+                frontEnglishTerm: "Regression to the Mean (in Testing)",
+                frontContent: "Как это может исказить результаты?",
+                backTitle: "Искажение",
+                backContent: "<p>Если вы выбрали вариант на основе краткосрочного экстремального (очень хорошего или очень плохого) результата, то при повторном измерении его результат, скорее всего, будет ближе к среднему. Это важно учитывать, не делая поспешных выводов по аномальным всплескам.</p>"
+            },
+            {
+                frontTitle: "Эффект новизны (Novelty Effect)",
+                frontEnglishTerm: "Novelty Effect",
+                frontContent: "Как он влияет на начальные результаты теста?",
+                backTitle: "Влияние",
+                backContent: "<p>Пользователи могут первоначально проявлять повышенный интерес к новому варианту просто потому, что он новый и необычный. Этот эффект обычно временный. Поэтому важно проводить тесты достаточно долго, чтобы увидеть стабилизировавшиеся результаты.</p>"
+            },
+            {
+                frontTitle: "Преждевременная остановка теста",
+                frontEnglishTerm: "Stopping Tests Too Early ('Peeking')",
+                frontContent: "Почему это проблема в частотном подходе?",
+                backTitle: "Риск ошибки",
+                backContent: "<p>В частотном подходе, если вы постоянно 'подглядываете' за результатами и останавливаете тест, как только p-value достигнет <0.05, вы значительно увеличиваете шанс ошибки I рода (ложноположительный результат). Размер выборки должен быть определен заранее.</p><p>Байесовский подход более устойчив к 'подглядыванию'.</p>"
+            },
+            {
+                frontTitle: "Игнорирование сегментов",
+                frontEnglishTerm: "Ignoring Segments",
+                frontContent: "Почему важно анализировать результаты по сегментам?",
+                backTitle: "Скрытые инсайты",
+                backContent: "<p>Общий результат теста может быть нейтральным, но один из вариантов может значительно лучше (или хуже) работать для определенных сегментов аудитории (новые vs. вернувшиеся, мобильные vs. десктоп, разные источники трафика). Анализ сегментов помогает найти эти инсайты.</p>"
+            },
+            {
+                frontTitle: "Неверная настройка целей (Goals)",
+                frontEnglishTerm: "Incorrect Goal Setup",
+                frontContent: "К чему приводит ошибка в настройке отслеживания конверсий?",
+                backTitle: "Недостоверные данные",
+                backContent: "<p>Если целевые действия (конверсии) в вашем инструменте A/B тестирования настроены неправильно (например, отслеживаются не те события, или есть дублирование), то все результаты теста будут искажены и приведут к неверным выводам.</p>"
+            },
+            {
+                frontTitle: "Тестирование слишком незначительных изменений",
+                frontEnglishTerm: "Testing Insignificant Changes",
+                frontContent: "Стоит ли тестировать изменение оттенка синего?",
+                backTitle: "Практическая значимость",
+                backContent: "<p>Хотя технически можно протестировать что угодно, важно фокусироваться на изменениях, которые имеют потенциал принести ощутимый эффект (хороший MDE). Тестирование микро-изменений часто требует огромной выборки и может не дать практически значимых результатов.</p>"
+            },
+            {
+                frontTitle: "Забыть про внешние факторы",
+                frontEnglishTerm: "Forgetting External Factors",
+                frontContent: "Что может повлиять на тест извне?",
+                backTitle: "Влияния",
+                backContent: "<ul><li>Сезонные распродажи или праздники.</li><li>Крупные маркетинговые кампании (ваши или конкурентов).</li><li>Технические сбои на сайте.</li><li>Изменения в источниках трафика.</li></ul><p>По возможности, старайтесь избегать проведения тестов во время таких аномальных периодов или учитывайте их влияние при анализе.</p>"
+            },
+            // 86-95: Байесовские тесты - Углубление
+            {
+                frontTitle: "Сопряженные априорные распределения",
+                frontEnglishTerm: "Conjugate Priors",
+                frontContent: "Зачем они используются в байесовских расчетах?",
+                backTitle: "Упрощение вычислений",
+                backContent: "<p>Априорное распределение называется сопряженным для функции правдоподобия, если апостериорное распределение принадлежит тому же семейству, что и априорное. Это сильно упрощает математические расчеты.</p><p>Пример: Бета-распределение (априорное) для биномиальной функции правдоподобия (конверсии) дает Бета-распределение (апостериорное).</p>"
+            },
+            {
+                frontTitle: "Информативные vs Неинформативные априоры",
+                frontEnglishTerm: "Informative vs Non-informative Priors",
+                frontContent: "Как выбрать априорное распределение?",
+                backTitle: "Выбор",
+                backContent: "<p><b>Неинформативное (слабое) априорное распределение:</b> Используется, когда у нас мало или нет предварительной информации. Оно оказывает минимальное влияние на апостериорное распределение, позволяя данным 'говорить самим за себя'.</p><p><b>Информативное априорное распределение:</b> Основано на предыдущих знаниях (прошлые тесты, исследования). Может помочь получить более точные результаты при малых выборках, но несет риск предвзятости, если априорные знания неверны.</p>"
+            },
+            {
+                frontTitle: " credible Interval (Байесовский Доверительный Интервал)",
+                frontEnglishTerm: "Credible Interval",
+                frontContent: "Чем отличается от Confidence Interval (Частотного)?",
+                backTitle: "Интерпретация",
+                backContent: "<p><b>Credible Interval (Байесовский):</b> Диапазон, в котором истинное значение параметра (например, конверсии) находится с определенной вероятностью (например, 95%) НА ОСНОВЕ наблюдаемых данных и априорных убеждений. Прямая вероятностная интерпретация.</p><p><b>Confidence Interval (Частотный):</b> Если бы мы повторили эксперимент много раз, то в 95% случаев построенные таким образом интервалы содержали бы истинное значение. Более сложная для интуиции интерпретация.</p>"
+            },
+            {
+                frontTitle: "Область практической эквивалентности (ROPE)",
+                frontEnglishTerm: "Region of Practical Equivalence (ROPE)",
+                frontContent: "Что это за концепция в байесовском анализе?",
+                backTitle: "Практическая значимость",
+                backContent: "<p>ROPE - это диапазон значений разницы между вариантами, который мы считаем практически незначимым. Если большая часть апостериорного распределения разницы попадает в ROPE, мы можем заключить, что варианты практически эквивалентны, даже если один из них статистически немного лучше.</p>"
+            },
+            {
+                frontTitle: "Байесовские факторы (Bayes Factors)",
+                frontEnglishTerm: "Bayes Factors",
+                frontContent: "Для чего они используются?",
+                backTitle: "Сравнение гипотез",
+                backContent: "<p>Байес-фактор показывает, во сколько раз одна гипотеза (например, H1: вариант B лучше A) более вероятна, чем другая (например, H0: нет разницы или A лучше B), после учета данных. Помогает количественно оценить силу доказательств в пользу одной из гипотез.</p>"
+            },
+            {
+                frontTitle: "Проблема 'Холодного старта' в MAB",
+                frontEnglishTerm: "Cold Start Problem in MAB",
+                frontContent: "С чем сталкиваются MAB-алгоритмы в начале?",
+                backTitle: "Начальный этап",
+                backContent: "<p>В самом начале теста у MAB-алгоритма мало информации о реальной эффективности вариантов. Поэтому начальное распределение трафика может быть неоптимальным, пока не накопится достаточно данных для более обоснованных решений. Требуется фаза 'разогрева' или более активного исследования.</p>"
+            },
+            {
+                frontTitle: "Контекстуальные бандиты",
+                frontEnglishTerm: "Contextual Bandits",
+                frontContent: "Что это за усложнение MAB?",
+                backTitle: "Учет контекста",
+                backContent: "<p>Это расширение MAB, где решение о выборе варианта принимается с учетом КОНТЕКСТА пользователя (например, его демография, история поведения, время суток). Это позволяет более персонализированно оптимизировать выбор.</p>"
+            },
+            {
+                frontTitle: "Байесовская оптимизация (BO)",
+                frontEnglishTerm: "Bayesian Optimization",
+                frontContent: "Связана ли она с A/B тестами?",
+                backTitle: "Связь",
+                backContent: "<p>BO - это более общая методология для оптимизации 'черных ящиков' (функций, где мы не знаем аналитического вида). Может использоваться для настройки гиперпараметров моделей или для поиска оптимальных параметров в сложных системах. A/B тестирование может быть частью процесса оценки в BO.</p><p>Не является прямым видом A/B теста, но использует байесовские принципы для эффективного поиска оптимума.</p>"
+            },
+            {
+                frontTitle: "Сложность внедрения Байесовских методов",
+                frontEnglishTerm: "Implementation Complexity of Bayesian Methods",
+                frontContent: "Насколько сложнее их применять?",
+                backTitle: "Трудности",
+                backContent: "<p>Концептуально они могут быть понятнее, но математическая реализация (особенно для сложных моделей без сопряженных априоров) может требовать методов численного интегрирования (например, MCMC - Markov Chain Monte Carlo), что сложнее, чем стандартные z-тесты или t-тесты в частотном подходе.</p><p>Однако для стандартных A/B тестов есть готовые калькуляторы и библиотеки.</p>"
+            },
+            {
+                frontTitle: "Байес и маленькие выборки",
+                frontEnglishTerm: "Bayesian and Small Samples",
+                frontContent: "Действительно ли он лучше для малых данных?",
+                backTitle: "Нюансы",
+                backContent: "<p>Байесовский подход может дать более стабильные и осмысленные результаты на малых выборках, ЕСЛИ используются разумные (возможно, информативные) априорные распределения. Однако он не творит чудес: если данных очень мало, неопределенность (ширина credible интервалов) все равно будет большой. Он честнее показывает эту неопределенность.</p>"
+            },
+            // 96-100: Итоги и выбор
+            {
+                frontTitle: "Главный вопрос: Какую проблему решаем?",
+                frontEnglishTerm: "Main Question: What problem are we solving?",
+                frontContent: "От чего зависит выбор типа теста?",
+                backTitle: "Определение цели",
+                backContent: "<p>Перед выбором типа теста (A/B, MVT, MAB, Байес/Частотный) важно четко определить: <br>- Что именно мы хотим узнать? (эффект одного изменения, лучшая комбинация, максимизация в реальном времени?) <br>- Какие ресурсы у нас есть? (трафик, время, разработчики?) <br>- Насколько критична ошибка?</p>"
+            },
+            {
+                frontTitle: "Если цель - быстро улучшить метрику на лету",
+                frontEnglishTerm: "Goal: Quick On-the-fly Metric Improvement",
+                frontContent: "Какой подход выбрать?",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Многорукий бандит (MAB).</b> Оптимизирует для немедленного результата, перенаправляя трафик на текущего лидера. Хорошо для краткосрочных задач или когда нет времени на долгий анализ.</p>"
+            },
+            {
+                frontTitle: "Если цель - глубокое понимание и долгосрочные выводы",
+                frontEnglishTerm: "Goal: Deep Understanding, Long-term Insights",
+                frontContent: "Какой подход выбрать?",
+                backTitle: "Рекомендация",
+                backContent: "<p><b>Классический A/B (или A/B/n) тест с фиксированным размером выборки и тщательным анализом.</b> Частотный или Байесовский анализ могут быть применены для оценки результатов. Дает более надежные выводы для стратегических решений.</p>"
+            },
+            {
+                frontTitle: "Частотный vs Байесовский: Философия",
+                frontEnglishTerm: "Frequentist vs Bayesian: Philosophy",
+                frontContent: "Ключевое различие в подходе к вероятности.",
+                backTitle: "Определение вероятности",
+                backContent: "<p><b>Частотный:</b> Вероятность - это долгосрочная частота событий в повторяемых экспериментах. Параметры модели (например, истинная конверсия) - фиксированные, но неизвестные константы.</p><p><b>Байесовский:</b> Вероятность - это степень субъективной уверенности в утверждении. Параметры модели - случайные величины, имеющие распределения вероятностей, которые обновляются с поступлением данных.</p>"
+            },
+            {
+                frontTitle: "Будущее за гибридными подходами?",
+                frontEnglishTerm: "Future: Hybrid Approaches?",
+                frontContent: "Сочетание лучших сторон?",
+                backTitle: "Тенденции",
+                backContent: "<p>Возможно. Например, использование байесовских принципов для более гибкого управления классическими A/B тестами, или применение MAB на начальном этапе для отсева явно плохих вариантов, а затем более тщательный A/B тест оставшихся. Индустрия постоянно ищет более эффективные и понятные методы экспериментирования.</p>"
+            }
+        ];
+
+
+        let currentCardIndex = 0;
+        const flashcard = document.getElementById('flashcard');
+        const cardFrontTitle = document.getElementById('card-front-title');
+        const cardFrontEnglishTerm = document.getElementById('card-front-english-term');
+        const cardFrontContent = document.getElementById('card-front-content');
+        const cardBackTitle = document.getElementById('card-back-title');
+        const cardBackContentElement = document.getElementById('card-back-content'); // Изменено
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const counterElement = document.getElementById('counter');
+
+        function updateFlashcard() {
+            const currentData = flashcardsData[currentCardIndex];
+            cardFrontTitle.textContent = currentData.frontTitle;
+            cardFrontEnglishTerm.textContent = currentData.frontEnglishTerm || "";
+            cardFrontContent.textContent = currentData.frontContent;
+
+            cardBackTitle.textContent = currentData.backTitle;
+            cardBackContentElement.innerHTML = currentData.backContent; // Используем innerHTML для поддержки HTML тегов
+
+            counterElement.textContent = `${currentCardIndex + 1} / ${flashcardsData.length}`;
+
+            prevButton.disabled = currentCardIndex === 0;
+            nextButton.disabled = currentCardIndex === flashcardsData.length - 1;
+
+            if (flashcard.classList.contains('flipped')) {
+                flashcard.classList.remove('flipped');
+            }
+        }
+
+        flashcard.addEventListener('click', () => {
+            flashcard.classList.toggle('flipped');
+        });
+
+        prevButton.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                updateFlashcard();
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentCardIndex < flashcardsData.length - 1) {
+                currentCardIndex++;
+                updateFlashcard();
+            }
+        });
+
+        updateFlashcard();
+    </script>
+</body>
+</html>
