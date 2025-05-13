@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Флеш-карты по A/B Тестированию</title>
+    <style>
+        :root {
+            --primary-color: #3498db; /* Синий */
+            --secondary-color: #2ecc71; /* Зеленый */
+            --background-color: #ecf0f1; /* Светло-серый */
+            --card-background-color: #ffffff; /* Белый */
+            --text-color: #2c3e50; /* Темно-серый */
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --font-family: 'Roboto', sans-serif;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        .container {
+            perspective: 1000px;
+            width: 90%;
+            max-width: 600px;
+            margin-bottom: 30px;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 350px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px var(--shadow-color);
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            box-sizing: border-box;
+            border-radius: var(--border-radius);
+            background-color: var(--card-background-color);
+            text-align: center;
+            overflow-y: auto; /* Для прокрутки если текст не помещается */
+        }
+
+        .flashcard-front {
+            border: 2px solid var(--primary-color);
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+            border: 2px solid var(--secondary-color);
+        }
+
+        .flashcard-face h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+            color: var(--primary-color);
+        }
+        .flashcard-back h2 {
+            color: var(--secondary-color);
+        }
+
+        .flashcard-face p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        .flashcard-back p {
+             font-size: 1em;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .nav-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-button:hover {
+            background-color: #2980b9; /* Темнее синий */
+            transform: translateY(-2px);
+        }
+        .nav-button:active {
+            transform: translateY(0px);
+        }
+
+        .nav-button:disabled {
+            background-color: #bdc3c7; /* Серый */
+            cursor: not-allowed;
+            transform: translateY(0);
+        }
+
+        #counter {
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: var(--text-color);
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px var(--shadow-color);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            .flashcard {
+                height: 400px; /* Больше высота для маленьких экранов */
+            }
+            .flashcard-face h2 {
+                font-size: 1.4em;
+            }
+            .flashcard-face p {
+                font-size: 1em;
+            }
+            .flashcard-back p {
+                font-size: 0.9em;
+            }
+            .title {
+                font-size: 2em;
+            }
+            .nav-button {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
+         @media (max-width: 400px) {
+            .flashcard {
+                height: 450px;
+            }
+             .navigation {
+                flex-direction: column;
+             }
+             .nav-button {
+                width: 100%;
+                margin-bottom: 10px;
+             }
+             #counter {
+                 margin-bottom: 15px;
+             }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">Флеш-карты по A/B Тестированию</h1>
+
+    <div class="container">
+        <div class="flashcard" id="flashcard">
+            <div class="flashcard-face flashcard-front">
+                <h2 id="card-front-title">Вопрос/Термин</h2>
+                <p id="card-front-content"></p>
+            </div>
+            <div class="flashcard-face flashcard-back">
+                <h2 id="card-back-title">Ответ/Определение</h2>
+                <p id="card-back-content"></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-button" id="prev-button">Назад</button>
+        <span id="counter">1 / 100</span>
+        <button class="nav-button" id="next-button">Вперед</button>
+    </div>
+
+    <script>
+        const flashcardsData = [
+            // 1-10: Основы A/B тестирования
+            { frontTitle: "Что такое A/B тестирование?", frontContent: "Также известное как сплит-тестирование.", backTitle: "Определение", backContent: "Метод сравнения двух версий веб-страницы, приложения или другого продукта (A и B) для определения, какая из них работает лучше с точки зрения достижения конкретной цели (например, конверсии)." },
+            { frontTitle: "Контрольная группа (Control)", frontContent: "Что это в A/B тесте?", backTitle: "Определение", backContent: "Исходная версия элемента или страницы, с которой сравнивается вариант. Обозначается как 'A'." },
+            { frontTitle: "Вариант (Variation/Challenger)", frontContent: "Что это в A/B тесте?", backTitle: "Определение", backContent: "Измененная версия элемента или страницы, которая тестируется против контрольной группы. Обозначается как 'B' (или C, D и т.д. в многовариантных тестах)." },
+            { frontTitle: "Гипотеза (Hypothesis)", frontContent: "Зачем она нужна?", backTitle: "Определение", backContent: "Четкое, проверяемое утверждение, которое предсказывает, как изменение повлияет на ключевую метрику. Пример: 'Изменение цвета кнопки CTA на зеленый увеличит конверсию на 5%'." },
+            { frontTitle: "Цель A/B тестирования", frontContent: "Какова основная задача?", backTitle: "Определение", backContent: "Принятие решений на основе данных для улучшения пользовательского опыта, повышения конверсии и достижения бизнес-целей." },
+            { frontTitle: "Метрика (Metric)", frontContent: "Что измеряем?", backTitle: "Определение", backContent: "Количественный показатель, используемый для оценки эффективности вариантов. Примеры: коэффициент конверсии, средний чек, показатель отказов." },
+            { frontTitle: "Коэффициент конверсии (Conversion Rate)", frontContent: "Как рассчитать?", backTitle: "Определение", backContent: "Процент пользователей, выполнивших желаемое целевое действие (например, покупка, регистрация) от общего числа посетителей." },
+            { frontTitle: "Статистическая значимость (Statistical Significance)", frontContent: "Почему это важно?", backTitle: "Определение", backContent: "Вероятность того, что наблюдаемая разница между вариантами не является случайной. Обычно используется p-value < 0.05 (т.е. 95% уверенности)." },
+            { frontTitle: "P-value", frontContent: "Что означает этот показатель?", backTitle: "Определение", backContent: "Вероятность получить наблюдаемые (или более экстремальные) результаты, если нулевая гипотеза верна (т.е. нет реальной разницы между вариантами). Низкий p-value (<0.05) указывает на статистическую значимость." },
+            { frontTitle: "Доверительный интервал (Confidence Interval)", frontContent: "Что он показывает?", backTitle: "Определение", backContent: "Диапазон значений, в котором, с определенной степенью уверенности (например, 95%), находится истинное значение метрики. Помогает оценить точность результатов." },
+
+            // 11-20: Типы тестов и элементы для тестирования
+            { frontTitle: "Сплит URL-тестирование (Split URL Testing)", frontContent: "Когда используется?", backTitle: "Определение", backContent: "Тип A/B теста, где варианты размещаются на разных URL-адресах. Используется для тестирования значительных изменений в дизайне или функциональности страницы." },
+            { frontTitle: "Многовариантное тестирование (Multivariate Testing - MVT)", frontContent: "Чем отличается от A/B?", backTitle: "Определение", backContent: "Тестирование нескольких изменений на одной странице одновременно для определения наилучшей комбинации элементов. Требует больше трафика, чем A/B тест." },
+            { frontTitle: "A/A тестирование", frontContent: "Зачем его проводить?", backTitle: "Определение", backContent: "Тест, при котором две идентичные версии страницы показываются разным сегментам аудитории. Используется для проверки корректности работы инструмента для A/B тестирования и определения базовой вариабельности." },
+            { frontTitle: "Элементы для тестирования: Заголовки (Headlines)", frontContent: "Почему они важны?", backTitle: "Влияние", backContent: "Первое, что видит пользователь. Тестирование разных формулировок, длины, наличия ключевых слов может значительно повлиять на вовлеченность." },
+            { frontTitle: "Элементы для тестирования: Призывы к действию (CTA)", frontContent: "Что можно менять?", backTitle: "Варианты", backContent: "Текст кнопки (например, 'Купить' vs 'Добавить в корзину'), цвет, размер, форма, расположение." },
+            { frontTitle: "Элементы для тестирования: Изображения и видео", frontContent: "Как они влияют?", backTitle: "Влияние", backContent: "Визуальный контент сильно влияет на восприятие. Тестируйте разные изображения, их качество, сюжет, наличие людей, использование видео." },
+            { frontTitle: "Элементы для тестирования: Текст (Copy)", frontContent: "Кроме заголовков?", backTitle: "Варианты", backContent: "Основной текст страницы, описания продуктов, списки преимуществ. Важны тон голоса, длина, структура, форматирование." },
+            { frontTitle: "Элементы для тестирования: Дизайн и макет (Layout)", frontContent: "Что можно изменять?", backTitle: "Варианты", backContent: "Расположение блоков, навигации, количество колонок, использование свободного пространства. Цель – улучшение юзабилити." },
+            { frontTitle: "Элементы для тестирования: Формы (Forms)", frontContent: "Как оптимизировать?", backTitle: "Варианты", backContent: "Количество полей, их названия, обязательность, тип ввода, дизайн кнопки отправки, наличие индикатора прогресса." },
+            { frontTitle: "Элементы для тестирования: Цены и предложения", frontContent: "Как тестировать?", backTitle: "Варианты", backContent: "Отображение цены (например, со скидкой), специальные предложения, бесплатная доставка, пакеты услуг. Требует осторожности и сегментации." },
+
+            // 21-30: Планирование и проведение тестов
+            { frontTitle: "Этап исследования (Research)", frontContent: "Что включает?", backTitle: "Действия", backContent: "Анализ веб-аналитики, тепловых карт, опросов пользователей, записей сессий для выявления проблемных зон и возможностей для улучшения." },
+            { frontTitle: "Формулировка гипотезы (Hypothesis Formulation)", frontContent: "Ключевые компоненты?", backTitle: "Компоненты", backContent: "Предполагаемое изменение, ожидаемый результат и причина, почему это изменение должно сработать (например, 'Если мы [изменение], то [ожидаемый результат], потому что [обоснование]')." },
+            { frontTitle: "Выбор метрик (Choosing Metrics)", frontContent: "Первичные и вторичные?", backTitle: "Типы", backContent: "Первичная метрика – главная цель теста (например, конверсия в покупку). Вторичные метрики – дополнительные показатели, которые могут быть затронуты (например, средний чек, показатель отказов)." },
+            { frontTitle: "Определение размера выборки (Sample Size Calculation)", frontContent: "Почему это важно?", backTitle: "Важность", backContent: "Необходимое количество посетителей для получения статистически значимых результатов. Зависит от базовой конверсии, ожидаемого подъема и уровня значимости." },
+            { frontTitle: "Минимально обнаруживаемый эффект (MDE - Minimum Detectable Effect)", frontContent: "Что это?", backTitle: "Определение", backContent: "Наименьшее изменение в конверсии (или другой метрике), которое вы хотите иметь возможность обнаружить с достаточной статистической мощностью." },
+            { frontTitle: "Статистическая мощность (Statistical Power)", frontContent: "Что это?", backTitle: "Определение", backContent: "Вероятность того, что тест правильно обнаружит реальную разницу между вариантами, если она существует (т.е. избежать ошибки II рода). Обычно стремятся к 80% или выше." },
+            { frontTitle: "Сегментация аудитории (Audience Segmentation)", frontContent: "Зачем нужна?", backTitle: "Цель", backContent: "Разделение посетителей на группы (например, новые vs вернувшиеся, по источнику трафика, по типу устройства) для анализа результатов теста для разных сегментов." },
+            { frontTitle: "Длительность теста (Test Duration)", frontContent: "Как определить?", backTitle: "Факторы", backContent: "Должен длиться достаточно долго, чтобы набрать нужный размер выборки и учесть цикличность бизнеса (например, полные недели). Обычно от 1-2 недель." },
+            { frontTitle: "Рандомизация (Randomization)", frontContent: "Почему критична?", backTitle: "Важность", backContent: "Обеспечение того, чтобы каждый посетитель имел равные шансы увидеть любой из вариантов, что исключает систематические ошибки и предвзятость." },
+            { frontTitle: "Инструменты для A/B тестирования", frontContent: "Примеры?", backTitle: "Платформы", backContent: "Google Optimize (закрыт), Optimizely, VWO, AB Tasty, Convert.com, кастомные решения." },
+
+            // 31-40: Анализ результатов и ошибки
+            { frontTitle: "Ошибка I рода (Type I Error / False Positive)", frontContent: "Что это?", backTitle: "Определение", backContent: "Ситуация, когда тест показывает, что вариант лучше контрольной группы, хотя на самом деле разницы нет (или вариант хуже). Вероятность такой ошибки равна уровню значимости (alpha)." },
+            { frontTitle: "Ошибка II рода (Type II Error / False Negative)", frontContent: "Что это?", backTitle: "Определение", backContent: "Ситуация, когда тест не обнаруживает реальную разницу между вариантами (т.е. вариант действительно лучше, но тест это не показал). Вероятность связана со статистической мощностью (1 - beta)." },
+            { frontTitle: "Подглядывание (Peeking Problem)", frontContent: "В чем проблема?", backTitle: "Проблема", backContent: "Преждевременная остановка теста, как только результаты кажутся значимыми. Это увеличивает вероятность ошибки I рода." },
+            { frontTitle: "Регрессия к среднему (Regression to the Mean)", frontContent: "Что означает?", backTitle: "Определение", backContent: "Явление, при котором экстремальные результаты при первом измерении имеют тенденцию быть ближе к среднему при последующих измерениях. Может ввести в заблуждение при анализе." },
+            { frontTitle: "Эффект новизны (Novelty Effect)", frontContent: "Как влияет?", backTitle: "Влияние", backContent: "Пользователи могут первоначально положительно реагировать на изменение просто потому, что оно новое, а не потому, что оно действительно лучше. Эффект со временем может исчезнуть." },
+            { frontTitle: "Эффект изменения (Change Aversion)", frontContent: "Противоположность эффекту новизны?", backTitle: "Влияние", backContent: "Постоянные пользователи могут негативно реагировать на изменения, к которым они не привыкли, даже если изменения объективно лучше. Требуется время на адаптацию." },
+            { frontTitle: "Сезонность и внешние факторы", frontContent: "Как учитывать?", backTitle: "Рекомендация", backContent: "Проводить тесты достаточно долго, чтобы сгладить краткосрочные колебания. Быть в курсе маркетинговых кампаний, праздников или других событий, которые могут повлиять на трафик и поведение." },
+            { frontTitle: "Валидность теста (Test Validity)", frontContent: "Что это?", backTitle: "Определение", backContent: "Степень, в которой результаты теста действительно отражают то, что они должны измерять, и могут быть обобщены. Включает внутреннюю и внешнюю валидность." },
+            { frontTitle: "Анализ сегментов после теста", frontContent: "Почему важен?", backTitle: "Цель", backContent: "Даже если общий результат не значим, один из вариантов мог показать хорошие результаты для определенного сегмента аудитории." },
+            { frontTitle: "Документирование результатов", frontContent: "Зачем нужно?", backTitle: "Польза", backContent: "Создание базы знаний о том, что работает, а что нет. Помогает избежать повторения ошибок и строить более сильные гипотезы в будущем." },
+
+            // 41-50: Продвинутые концепции
+            { frontTitle: "Байесовский подход (Bayesian Approach)", frontContent: "Альтернатива частотному?", backTitle: "Отличие", backContent: "Метод статистического вывода, который обновляет вероятность гипотезы по мере поступления новых данных. Позволяет говорить о вероятности того, что вариант B лучше варианта A." },
+            { frontTitle: "Частотный подход (Frequentist Approach)", frontContent: "Основной подход?", backTitle: "Характеристика", backContent: "Основан на p-value и доверительных интервалах. Оценивает вероятность получения данных при условии, что нулевая гипотеза верна." },
+            { frontTitle: "Проблема множественных сравнений (Multiple Comparisons Problem)", frontContent: "Когда возникает?", backTitle: "Суть", backContent: "При тестировании многих вариантов или многих метрик одновременно увеличивается вероятность ложноположительных результатов. Требуются поправки (например, поправка Бонферрони)." },
+            { frontTitle: "Lift (Подъем)", frontContent: "Что показывает?", backTitle: "Определение", backContent: "Относительное улучшение метрики варианта по сравнению с контрольной группой, выраженное в процентах. (Конверсия B - Конверсия A) / Конверсия A * 100%." },
+            { frontTitle: "ROI A/B тестирования", frontContent: "Как оценить?", backTitle: "Расчет", backContent: "Соотношение выгоды от внедрения выигрышного варианта (например, дополнительный доход) к затратам на проведение теста." },
+            { frontTitle: "Персонализация (Personalization)", frontContent: "Связь с A/B тестами?", backTitle: "Связь", backContent: "A/B тестирование может использоваться для проверки эффективности различных персонализированных вариантов контента для разных сегментов аудитории." },
+            { frontTitle: "Feature Flags (Флаги Функциональности)", frontContent: "Как используются?", backTitle: "Применение", backContent: "Механизм, позволяющий включать или выключать определенные функции для разных групп пользователей. Удобно для постепенного внедрения и A/B тестирования нового функционала." },
+            { frontTitle: "Время до конверсии (Time to Conversion)", frontContent: "Важная метрика?", backTitle: "Значение", backContent: "Помогает понять, как быстро пользователи совершают целевое действие после взаимодействия с вариантом. Может быть вторичной метрикой." },
+            { frontTitle: "Микроконверсии (Micro-conversions)", frontContent: "Что это?", backTitle: "Определение", backContent: "Небольшие шаги на пути к основной (макро) конверсии, например, подписка на рассылку, добавление товара в корзину, просмотр видео о продукте." },
+            { frontTitle: "Always Be Testing (Всегда тестируй)", frontContent: "Философия?", backTitle: "Принцип", backContent: "Культура непрерывной оптимизации, где тестирование является постоянным процессом для улучшения продукта и пользовательского опыта." },
+
+            // 51-60: Практические советы и лучшие практики
+            { frontTitle: "Тестируйте одно изменение за раз", frontContent: "Почему это важно?", backTitle: "Причина", backContent: "Если вы тестируете несколько изменений одновременно, вы не сможете определить, какое из них привело к изменению результата." },
+            { frontTitle: "Приоритезация тестов (Prioritization)", frontContent: "Как выбрать, что тестировать?", backTitle: "Методы", backContent: "Используйте фреймворки, такие как ICE (Impact, Confidence, Ease) или PIE (Potential, Importance, Ease), чтобы оценить потенциальную ценность и сложность каждого теста." },
+            { frontTitle: "Не останавливайте тест слишком рано", frontContent: "Последствия?", backTitle: "Риски", backContent: "Недостаточный размер выборки или неучет бизнес-циклов может привести к неверным выводам (см. 'Подглядывание')." },
+            { frontTitle: "Тестируйте на всех устройствах", frontContent: "Почему?", backTitle: "Обоснование", backContent: "Поведение пользователей может сильно отличаться на десктопах, планшетах и мобильных устройствах. Убедитесь, что ваши изменения корректно работают везде." },
+            { frontTitle: "Учитывайте скорость загрузки страницы", frontContent: "Влияние на тест?", backTitle: "Влияние", backContent: "Если вариант загружается медленнее контрольной группы, это может негативно повлиять на его результаты, даже если само изменение хорошее." },
+            { frontTitle: "Получайте качественную обратную связь", frontContent: "Кроме количественных данных?", backTitle: "Методы", backContent: "Опросы, юзабилити-тестирование, интервью с пользователями могут помочь понять 'почему' за цифрами A/B теста." },
+            { frontTitle: "Не бойтесь 'неудачных' тестов", frontContent: "Почему они тоже ценны?", backTitle: "Ценность", backContent: "Тесты, которые не показали улучшения или даже ухудшили метрики, все равно дают ценную информацию о том, что не работает для вашей аудитории." },
+            { frontTitle: "Повторяйте успешные тесты (Re-testing)", frontContent: "Зачем?", backTitle: "Цель", backContent: "Условия могут меняться (аудитория, рынок). Повторное тестирование выигрышных вариантов через некоторое время может подтвердить их эффективность или выявить необходимость новых изменений." },
+            { frontTitle: "Используйте понятные названия для тестов и вариантов", frontContent: "Для чего?", backTitle: "Польза", backContent: "Облегчает анализ, документирование и коммуникацию результатов внутри команды." },
+            { frontTitle: "Делитесь результатами с командой", frontContent: "Важность коммуникации?", backTitle: "Преимущества", backContent: "Способствует формированию культуры, основанной на данных, и генерации новых идей для тестирования." },
+
+            // 61-70: Метрики и KPI
+            { frontTitle: "Показатель отказов (Bounce Rate)", frontContent: "Что он означает?", backTitle: "Определение", backContent: "Процент посетителей, которые покинули сайт после просмотра только одной страницы. Высокий показатель отказов может указывать на проблемы с релевантностью или юзабилити." },
+            { frontTitle: "Средний чек (Average Order Value - AOV)", frontContent: "Как влияет на бизнес?", backTitle: "Значение", backContent: "Средняя сумма, которую клиент тратит за одну транзакцию. A/B тесты могут быть направлены на его увеличение." },
+            { frontTitle: "Доход на посетителя (Revenue Per Visitor - RPV)", frontContent: "Что это за метрика?", backTitle: "Определение", backContent: "Общий доход, деленный на общее количество уникальных посетителей. Помогает оценить общую ценность трафика." },
+            { frontTitle: "Клики (Clicks)", frontContent: "Простая, но важная метрика?", backTitle: "Применение", backContent: "Часто используется для оценки эффективности CTA, баннеров, ссылок. Является основой для CTR." },
+            { frontTitle: "Click-Through Rate (CTR)", frontContent: "Показатель кликабельности", backTitle: "Формула", backContent: "(Количество кликов / Количество показов) * 100%. Важен для оценки рекламы, элементов навигации, CTA." },
+            { frontTitle: "Engagement Rate (Показатель вовлеченности)", frontContent: "Что может включать?", backTitle: "Примеры", backContent: "Лайки, комментарии, репосты, время на странице, глубина просмотра. Зависит от контекста." },
+            { frontTitle: "Customer Lifetime Value (CLTV / LTV)", frontContent: "Пожизненная ценность клиента", backTitle: "Значение", backContent: "Прогнозируемый общий доход, который компания получит от одного клиента за все время сотрудничества. Важная долгосрочная метрика." },
+            { frontTitle: "Cost Per Acquisition (CPA) / Cost Per Conversion", frontContent: "Стоимость привлечения клиента/конверсии", backTitle: "Определение", backContent: "Затраты на маркетинг, деленные на количество привлеченных клиентов или совершенных конверсий. Цель – снижение CPA." },
+            { frontTitle: "Retention Rate (Коэффициент удержания)", frontContent: "Как измеряется?", backTitle: "Определение", backContent: "Процент клиентов, которые продолжают пользоваться продуктом или услугой в течение определенного периода времени." },
+            { frontTitle: "Churn Rate (Коэффициент оттока)", frontContent: "Противоположность Retention?", backTitle: "Определение", backContent: "Процент клиентов, которые прекращают пользоваться продуктом или услугой за определенный период. Цель – снижение Churn Rate." },
+
+            // 71-80: Юридические и этические аспекты
+            { frontTitle: "Информированное согласие (Informed Consent)", frontContent: "Важно ли в A/B тестах?", backTitle: "Этика", backContent: "В некоторых случаях, особенно при тестировании чувствительных изменений, может потребоваться информировать пользователей об участии в эксперименте, хотя чаще это не делается явно для сохранения естественности поведения." },
+            { frontTitle: "Конфиденциальность данных (Data Privacy)", frontContent: "Что нужно учитывать?", backTitle: "Аспекты", backContent: "Соблюдение законов о защите данных (например, GDPR, CCPA). Анонимизация или псевдонимизация персональных данных, используемых в аналитике." },
+            { frontTitle: "Негативный опыт пользователя", frontContent: "Риски тестирования?", backTitle: "Возможные проблемы", backContent: "Некоторые варианты могут ухудшить пользовательский опыт. Важно быстро выявлять и отключать такие варианты." },
+            { frontTitle: "Дискриминация (Discrimination)", frontContent: "Как избежать?", backTitle: "Этика", backContent: "Убедитесь, что сегментация и персонализация не приводят к несправедливому или дискриминационному отношению к определенным группам пользователей." },
+            { frontTitle: "Прозрачность (Transparency)", frontContent: "Нужна ли полная?", backTitle: "Баланс", backContent: "Хотя полная прозрачность о каждом тесте может повлиять на поведение, важно иметь четкие внутренние гайдлайны по этике тестирования." },
+            { frontTitle: "Тестирование цен", frontContent: "Этические соображения?", backTitle: "Осторожность", backContent: "Показ разных цен разным пользователям одновременно (ценовая дискриминация) может вызвать негативную реакцию. Часто тестируют на разных рынках или в разное время." },
+            { frontTitle: "Манипулятивные паттерны (Dark Patterns)", frontContent: "Чего следует избегать?", backTitle: "Примеры", backContent: "Использование A/B тестов для оптимизации обманных или манипулятивных интерфейсов, которые вводят пользователей в заблуждение или заставляют совершать нежелательные действия." },
+            { frontTitle: "Доступность (Accessibility)", frontContent: "Как учитывать в тестах?", backTitle: "Рекомендация", backContent: "Убедитесь, что все варианты (A и B) соответствуют стандартам веб-доступности (WCAG), чтобы не исключать пользователей с ограниченными возможностями." },
+            { frontTitle: "Влияние на меньшинства", frontContent: "Что если тест вредит небольшой группе?", backTitle: "Принцип", backContent: "Даже если общий результат положителен, важно анализировать влияние на различные сегменты и избегать значительного вреда для каких-либо групп пользователей." },
+            { frontTitle: "Ответственность за результаты", frontContent: "Кто несет?", backTitle: "Команда", backContent: "Команда, проводящая тест, и компания в целом несут ответственность за этические последствия внедряемых изменений." },
+
+            // 81-90: Распространенные ошибки и как их избежать
+            { frontTitle: "Слишком много одновременных тестов", frontContent: "В чем проблема?", backTitle: "Проблема", backContent: "Тесты могут влиять друг на друга (interaction effects), искажая результаты. Изолируйте тесты или используйте продвинутые методы для учета взаимодействий." },
+            { frontTitle: "Неправильная настройка целей (Goals)", frontContent: "К чему приводит?", backTitle: "Последствия", backContent: "Если цели в инструменте A/B тестирования настроены неверно, все собранные данные и выводы будут ошибочными." },
+            { frontTitle: "Игнорирование статистической незначимости", frontContent: "Что делать, если результат не значим?", backTitle: "Выводы", backContent: "Это означает, что на основе имеющихся данных нельзя утверждать о превосходстве одного варианта над другим. Это тоже результат, который говорит, что изменение не принесло ожидаемого эффекта." },
+            { frontTitle: "Слепое копирование чужих тестов", frontContent: "Почему это плохая идея?", backTitle: "Причина", backContent: "То, что сработало для одной компании с другой аудиторией и продуктом, может не сработать для вас. Всегда тестируйте идеи в своем контексте." },
+            { frontTitle: "Недостаточный трафик", frontContent: "Последствия?", backTitle: "Проблема", backContent: "Тесты будут длиться очень долго или не достигнут статистической значимости, делая выводы ненадежными." },
+            { frontTitle: "Изменение вариантов во время теста", frontContent: "Можно ли так делать?", backTitle: "Запрет", backContent: "Любые изменения в контрольной группе или варианте во время активного теста аннулируют его результаты." },
+            { frontTitle: "Неравномерное распределение трафика", frontContent: "К чему приводит?", backTitle: "Искажение", backContent: "Если трафик распределяется не случайно (например, 50/50), это может внести предвзятость в результаты. Убедитесь в корректной настройке сплита." },
+            { frontTitle: "Забыть о внешних событиях", frontContent: "Пример?", backTitle: "Пример", backContent: "Запуск крупной рекламной кампании, технические проблемы на сайте или праздники могут сильно повлиять на результаты теста, если их не учесть." },
+            { frontTitle: "Чрезмерная уверенность в интуиции", frontContent: "Почему данные важнее?", backTitle: "Обоснование", backContent: "Интуиция может быть хорошей отправной точкой для гипотез, но окончательные решения должны основываться на объективных данных A/B тестов." },
+            { frontTitle: "Остановка на локальном максимуме", frontContent: "Что это значит?", backTitle: "Определение", backContent: "Достижение точки, где небольшие итеративные улучшения больше не дают значимого роста. Может потребоваться более радикальное тестирование (например, редизайн), чтобы выйти на новый уровень." },
+
+            // 91-100: Будущее и тренды A/B тестирования
+            { frontTitle: "Искусственный интеллект (AI) в A/B тестировании", frontContent: "Как применяется?", backTitle: "Применения", backContent: "Автоматическая генерация гипотез, персонализация в реальном времени, предиктивный анализ результатов, автоматическая оптимизация трафика между вариантами (multi-armed bandit)." },
+            { frontTitle: "Серверное A/B тестирование (Server-Side Testing)", frontContent: "Преимущества?", backTitle: "Плюсы", backContent: "Больше гибкости, возможность тестировать сложные изменения в бэкенде, логике приложения, API. Меньше мерцания контента (flicker effect)." },
+            { frontTitle: "Клиентское A/B тестирование (Client-Side Testing)", frontContent: "Особенности?", backTitle: "Характеристики", backContent: "Изменения вносятся в браузере пользователя с помощью JavaScript. Проще в реализации для фронтенд-изменений, но может вызывать мерцание." },
+            { frontTitle: "A/B тестирование в мобильных приложениях", frontContent: "Специфика?", backTitle: "Отличия", backContent: "Требует SDK, учет особенностей платформ (iOS, Android), процессов релиза в сторах. Часто используется для тестирования UI/UX, онбординга, монетизации." },
+            { frontTitle: "Персонализация на основе AI", frontContent: "Следующий шаг после A/B?", backTitle: "Развитие", backContent: "Алгоритмы динамически подбирают наилучший вариант контента или функционала для каждого индивидуального пользователя, а не для сегментов." },
+            { frontTitle: "Омниканальное A/B тестирование", frontContent: "Что это?", backTitle: "Определение", backContent: "Тестирование и согласование пользовательского опыта на всех точках контакта с клиентом (сайт, мобильное приложение, email, физические магазины)." },
+            { frontTitle: "Голосовой интерфейс (Voice UI) и A/B тестирование", frontContent: "Новые вызовы?", backTitle: "Задачи", backContent: "Тестирование различных формулировок, интонаций, сценариев взаимодействия в голосовых помощниках и приложениях." },
+            { frontTitle: "A/B тестирование в AR/VR", frontContent: "Перспективы?", backTitle: "Возможности", backContent: "Тестирование пользовательских интерфейсов, взаимодействий, уровней погружения в средах дополненной и виртуальной реальности." },
+            { frontTitle: "Этика AI в тестировании", frontContent: "Новые вопросы?", backTitle: "Проблемы", backContent: "Обеспечение справедливости, прозрачности и отсутствия предвзятости в алгоритмах, используемых для персонализации и принятия решений на основе тестов." },
+            { frontTitle: "Культура экспериментов", frontContent: "Ключ к успеху?", backTitle: "Важность", backContent: "Создание в компании среды, где поощряются эксперименты, анализ данных и постоянное обучение для улучшения продукта и бизнес-показателей." }
+        ];
+
+        let currentCardIndex = 0;
+        const flashcard = document.getElementById('flashcard');
+        const cardFrontTitle = document.getElementById('card-front-title');
+        const cardFrontContent = document.getElementById('card-front-content');
+        const cardBackTitle = document.getElementById('card-back-title');
+        const cardBackContent = document.getElementById('card-back-content');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const counterElement = document.getElementById('counter');
+
+        function updateFlashcard() {
+            const currentData = flashcardsData[currentCardIndex];
+            cardFrontTitle.textContent = currentData.frontTitle;
+            cardFrontContent.textContent = currentData.frontContent;
+            cardBackTitle.textContent = currentData.backTitle;
+            cardBackContent.textContent = currentData.backContent;
+
+            counterElement.textContent = `${currentCardIndex + 1} / ${flashcardsData.length}`;
+
+            prevButton.disabled = currentCardIndex === 0;
+            nextButton.disabled = currentCardIndex === flashcardsData.length - 1;
+
+            // Сбросить состояние переворота при смене карточки
+            if (flashcard.classList.contains('flipped')) {
+                flashcard.classList.remove('flipped');
+            }
+        }
+
+        flashcard.addEventListener('click', () => {
+            flashcard.classList.toggle('flipped');
+        });
+
+        prevButton.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                updateFlashcard();
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentCardIndex < flashcardsData.length - 1) {
+                currentCardIndex++;
+                updateFlashcard();
+            }
+        });
+
+        // Инициализация первой карточки
+        updateFlashcard();
+    </script>
+</body>
+</html>
