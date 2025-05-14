@@ -23,6 +23,8 @@
             --overlay-background: rgba(0, 0, 0, 0.5);
             --modal-background: #ffffff;
             --modal-text: #333333;
+             --search-button-background: #f0ad4e; /* Цвет для кнопки поиска */
+             --search-button-hover: #ec971f;
         }
 
         body.dark-mode {
@@ -43,6 +45,8 @@
             --overlay-background: rgba(0, 0, 0, 0.7);
             --modal-background: #333333;
             --modal-text: #f0f0f0;
+             --search-button-background: #f0ad4e; /* Цвет для кнопки поиска */
+             --search-button-hover: #ec971f;
         }
 
         body {
@@ -55,7 +59,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            min-height: 10vh; /* Изменено на 10vh, чтобы контент не занимал весь экран */
             transition: background-color 0.3s ease, color 0.3s ease;
             box-sizing: border-box; /* Учитываем padding в общей ширине */
             overflow-y: auto; /* Позволяет прокручивать страницу, если контент не помещается */
@@ -97,7 +101,7 @@
              flex-wrap: nowrap; /* Предотвращаем перенос внутри группы */
              flex-shrink: 0; /* Не сжимаем группу сильно */
              min-width: auto; /* Ширина определяется содержимым */
-			
+
          }
 
          #card-counts {
@@ -259,6 +263,20 @@
             background-color: var(--review-button-hover);
         }
 
+        /* Style for the new search button */
+        #search-button {
+            margin-top: 10px; /* Отступ сверху */
+            background-color: #9400d3;
+            color: var(--button-text);
+            width: 100%; /* Кнопка занимает всю доступную ширину */
+            max-width: 400px; /* Ограничиваем ширину по ширине карточки */
+            box-sizing: border-box;
+        }
+
+        #search-button:hover {
+            background-color: #800080 ;
+        }
+
 
         .navigation, .controls {
             margin-top: 20px;
@@ -365,7 +383,7 @@
              }
 
              header h1 {
-                  font-size: 12px; /* Размер заголовка 12px на мобильном тоже */
+                  font-size: 18px; /* Размер заголовка 12px на мобильном тоже */
                   text-align: center;
                   width: 100%; /* Занимает всю ширину */
                   min-width: auto; /* Сбрасываем минимальную ширину */
@@ -436,6 +454,10 @@
                  padding-bottom: 110px;
              }
 
+             #search-button {
+                 max-width: 100%; /* На мобильных кнопка поиска занимает всю ширину */
+             }
+
              .modal-content {
                  padding: 20px;
              }
@@ -450,16 +472,22 @@
          #reset-app:focus-visible {
             outline-color: var(--reset-button-hover);
          }
+         #search-button:focus-visible {
+             outline-color: var(--search-button-hover);
+         }
          .modal-content button:focus-visible {
              outline-color: var(--button-background-hover); /* Или другой цвет для модальной кнопки */
          }
     </style>
 </head>
-<body class="dark-mode"> <header>
-        <h1>A/B TESTS</h1> <div class="header-stats-timer"> <div id="card-counts">И: 0, П: 0, В: 0</div>
+<body class="dark-mode">
+    <header>
+        <h1>A/B TESTS</h1>
+        <div class="header-stats-timer">
+            <div id="card-counts">И: 0, П: 0, В: 0</div>
             <div id="timer">00:00</div>
         </div>
-        </header>
+    </header>
 
     <main>
         <div class="card-container">
@@ -477,15 +505,20 @@
             </div>
         </div>
 
+        <button id="search-button">Узнать детали</button>
+
         <div class="navigation">
             <button id="prev-card">&laquo; Назад</button>
             <button id="next-card">&raquo; Вперед</button>
         </div>
 
         <div class="controls">
-            <button id="shuffle-cards">Перемешать</button> <button id="toggle-review-mode">Повторить (0)</button> <button id="toggle-stats">Показать статистику</button>
-             <button id="theme-toggle">Сменить тему</button>
-             <button id="reset-app">Сброс</button> </div>
+            <button id="shuffle-cards">Перемешать</button>
+            <button id="toggle-review-mode">Повторить (0)</button>
+            <button id="toggle-stats">Показать статистику</button>
+            <button id="theme-toggle">Сменить тему</button>
+            <button id="reset-app">Сброс</button>
+        </div>
 
         <div class="stats-area" id="stats-area">
             <h2>Статистика</h2>
@@ -493,14 +526,14 @@
             <p>Изучено: <span id="learned-stats">0</span></p>
             <p>Требуют повторения: <span id="review-stats">0</span></p>
             <p>Просмотрено: <span id="seen-stats">0</span></p>
-             </div>
+        </div>
     </main>
 
     <div class="modal-overlay" id="completion-modal">
         <div class="modal-content">
             <h2>Поздравляем!</h2>
             <p>Вы изучили все карточки!</p>
-             <p>Ваше время: <span id="final-time">00:00</span></p>
+            <p>Ваше время: <span id="final-time">00:00</span></p>
             <button id="start-over-button">Начать заново</button>
         </div>
     </div>
@@ -512,9 +545,9 @@
             const cardBackText = document.getElementById('card-back-text');
             const prevButton = document.getElementById('prev-card');
             const nextButton = document.getElementById('next-card');
-            const shuffleButton = document.getElementById('shuffle-cards'); // Теперь внизу
-            const toggleReviewModeButton = document.getElementById('toggle-review-mode'); // Теперь внизу
-            const themeToggleButton = document.getElementById('theme-toggle'); // Внизу
+            const shuffleButton = document.getElementById('shuffle-cards');
+            const toggleReviewModeButton = document.getElementById('toggle-review-mode');
+            const themeToggleButton = document.getElementById('theme-toggle');
             const actionButtons = document.querySelectorAll('.card-actions .action-button');
             const toggleStatsButton = document.getElementById('toggle-stats');
             const statsArea = document.getElementById('stats-area');
@@ -526,16 +559,15 @@
             const completionModal = document.getElementById('completion-modal');
             const startOverButton = document.getElementById('start-over-button');
             const finalTimeDisplay = document.getElementById('final-time');
-            const resetAppButton = document.getElementById('reset-app'); // Теперь внизу
-            const cardCountsDisplay = document.getElementById('card-counts'); // Вверху
+            const resetAppButton = document.getElementById('reset-app');
+            const cardCountsDisplay = document.getElementById('card-counts');
+            const searchButton = document.getElementById('search-button'); // Get the new search button
 
 
             // --- Sample Data ---
             // Статусы сбрасываются при каждой загрузке, т.к. нет сохранения
             let cards = [
-
-
-    { id: 'card-1', front: 'Что такое A/B-тестирование?', back: 'Метод сравнения двух версий чего-либо (например, веб-страницы) для определения, какая из них работает лучше.', status: 'unseen' },
+ { id: 'card-1', front: 'Что такое A/B-тестирование?', back: 'Метод сравнения двух версий чего-либо (например, веб-страницы) для определения, какая из них работает лучше.', status: 'unseen' },
     { id: 'card-2', front: 'Какие основные цели A/B-тестирования?', back: 'Улучшение ключевых показателей (конверсия, кликабельность, продажи), снижение рисков при внедрении изменений, принятие решений на основе данных.', status: 'unseen' },
     { id: 'card-3', front: 'Что такое контрольная группа в A/B-тесте?', back: 'Группа пользователей, которой показывают текущую (старую) версию.', status: 'unseen' },
     { id: 'card-4', front: 'Что такое тестовая группа в A/B-тесте?', back: 'Группа пользователей, которой показывают новую (экспериментальную) версию.', status: 'unseen' },
@@ -735,7 +767,6 @@
     { id: 'card-198', front: 'Как BIC используется в A/B-тестах?', back: 'Для выбора лучшей модели, особенно при больших выборках.', status: 'unseen' },
     { id: 'card-199', front: 'Что такое кросс-энтропия?', back: 'Мера расхождения между распределениями, часто используемая в классификации.', status: 'unseen' },
     { id: 'card-200', front: 'Как кросс-энтропия используется в A/B-тестах?', back: 'Для оценки качества моделей классификации при анализе бинарных метрик.', status: 'unseen' },
-
 
 {
   id: 'card-201',
@@ -1533,101 +1564,104 @@
   front: 'Как использовать `dask` для больших данных?',
   back: 'Пример:\n\nimport dask.dataframe as dd\ndf = dd.read_csv("big_data.csv")\n\nДля обработки данных, которые не помещаются в память.',
   status: 'unseen'
-}
+},
 
-]
+
+		   ];
 
 
             let currentCardIndex = 0;
             let shuffledOrder = [];
             let isShuffled = false;
 
-             let currentDeck = []; // Карточки, которые сейчас отображаются
-             let isReviewMode = false;
+            let currentDeck = []; // Карточки, которые сейчас отображаются
+            let isReviewMode = false;
 
             let timerInterval = null;
             let secondsElapsed = 0;
 
 
             // --- Timer Functions ---
-             function formatTime(seconds) {
-                 const h = Math.floor(seconds / 3600);
-                 const m = Math.floor((seconds % 3600) / 60);
-                 const s = seconds % 60;
-                 const padded = [m, s].map(val => val.toString().padStart(2, '0'));
-                 if (h > 0) {
-                     return `${h.toString().padStart(2, '0')}:${padded[0]}:${padded[1]}`;
-                 }
-                 return `${padded[0]}:${padded[1]}`;
-             }
+            function formatTime(seconds) {
+                const h = Math.floor(seconds / 3600);
+                const m = Math.floor((seconds % 3600) / 60);
+                const s = seconds % 60;
+                const padded = [m, s].map(val => val.toString().padStart(2, '0'));
+                if (h > 0) {
+                    return `${h.toString().padStart(2, '0')}:${padded[0]}:${padded[1]}`;
+                }
+                return `${padded[0]}:${padded[1]}`;
+            }
 
-             function startTimer() {
-                 if (timerInterval) clearInterval(timerInterval);
-                 timerDisplay.textContent = formatTime(secondsElapsed);
-                 timerInterval = setInterval(() => {
-                     secondsElapsed++;
-                     timerDisplay.textContent = formatTime(secondsElapsed);
-                 }, 1000);
-             }
+            function startTimer() {
+                if (timerInterval) clearInterval(timerInterval);
+                timerDisplay.textContent = formatTime(secondsElapsed);
+                timerInterval = setInterval(() => {
+                    secondsElapsed++;
+                    timerDisplay.textContent = formatTime(secondsElapsed);
+                }, 1000);
+            }
 
-             function stopTimer() {
-                 if (timerInterval) {
-                     clearInterval(timerInterval);
-                     timerInterval = null;
-                 }
-             }
+            function stopTimer() {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+            }
 
-             function resetTimer() {
-                 stopTimer();
-                 secondsElapsed = 0;
-                 timerDisplay.textContent = formatTime(secondsElapsed);
-             }
+            function resetTimer() {
+                stopTimer();
+                secondsElapsed = 0;
+                timerDisplay.textContent = formatTime(secondsElapsed);
+            }
 
 
             // --- Card Display and Navigation ---
 
             function getCardData(index) {
-                 const sourceCards = (isShuffled && !isReviewMode && shuffledOrder && shuffledOrder.length === cards.length) ?
+                const sourceCards = (isShuffled && !isReviewMode && shuffledOrder && shuffledOrder.length === cards.length) ?
                                     shuffledOrder.map(i => cards[i]) :
                                     currentDeck;
 
-                 if (sourceCards.length === 0) {
-                     return null;
+                if (sourceCards.length === 0) {
+                    return null;
+                }
+
+                const actualIndex = index % sourceCards.length;
+                const wrappedIndex = actualIndex < 0 ? actualIndex + sourceCards.length : actualIndex;
+
+                if (isShuffled && !isReviewMode && shuffledOrder && shuffledOrder.length === cards.length) {
+                     const originalIndex = shuffledOrder[wrappedIndex];
+                     return cards[originalIndex];
+                 } else {
+                     return currentDeck[wrappedIndex];
                  }
-
-                 const actualIndex = index % sourceCards.length;
-                 const wrappedIndex = actualIndex < 0 ? actualIndex + sourceCards.length : actualIndex;
-
-                 if (isShuffled && !isReviewMode && shuffledOrder && shuffledOrder.length === cards.length) {
-                      const originalIndex = shuffledOrder[wrappedIndex];
-                      return cards[originalIndex];
-                  } else {
-                      return currentDeck[wrappedIndex];
-                  }
             }
 
             function displayCard(index) {
-                 // Проверяем, есть ли карточки в текущей колоде
+                // Проверяем, есть ли карточки в текущей колоде
                 if (currentDeck.length === 0) {
-                     cardFrontText.textContent = isReviewMode ? "Нет карточек для повторения." : "Нет карточек.";
-                     cardBackText.textContent = isReviewMode ? "Добавьте карточки или отметьте их для повторения." : "Добавьте карточки.";
-                     flashcard.classList.remove('is-flipped');
-                     prevButton.disabled = true;
-                     nextButton.disabled = true;
-                     actionButtons.forEach(btn => btn.style.visibility = 'hidden');
-                     shuffleButton.disabled = true;
-                     toggleReviewModeButton.disabled = true;
-                     currentCardIndex = 0;
-                     updateStats();
-                     return;
+                    cardFrontText.textContent = isReviewMode ? "Нет карточек для повторения." : "Нет карточек.";
+                    cardBackText.textContent = isReviewMode ? "Добавьте карточки или отметьте их для повторения." : "Добавьте карточки.";
+                    flashcard.classList.remove('is-flipped');
+                    prevButton.disabled = true;
+                    nextButton.disabled = true;
+                    actionButtons.forEach(btn => btn.style.visibility = 'hidden');
+                    shuffleButton.disabled = true;
+                    toggleReviewModeButton.disabled = true;
+                    searchButton.disabled = true; // Disable search button
+                    currentCardIndex = 0;
+                    updateStats();
+                    return;
                 }
 
                 // Включаем кнопки, если они были отключены
-                 prevButton.disabled = false;
-                 nextButton.disabled = false;
-                 actionButtons.forEach(btn => btn.style.visibility = 'visible');
-                 shuffleButton.disabled = isReviewMode;
-                 toggleReviewModeButton.disabled = false;
+                prevButton.disabled = false;
+                nextButton.disabled = false;
+                actionButtons.forEach(btn => btn.style.visibility = 'visible');
+                shuffleButton.disabled = isReviewMode;
+                toggleReviewModeButton.disabled = false;
+                searchButton.disabled = false; // Enable search button
 
 
                 // Корректируем индекс, чтобы он оставался в пределах текущей колоды (циклическая навигация)
@@ -1643,9 +1677,9 @@
                     cardFrontText.textContent = card.front;
                     cardBackText.textContent = card.back;
                 } else {
-                     console.error("[displayCard] getCardData returned null.");
-                     cardFrontText.textContent = "Ошибка загрузки карточки";
-                     cardBackText.textContent = "Ошибка загрузки карточки";
+                    console.error("[displayCard] getCardData returned null.");
+                    cardFrontText.textContent = "Ошибка загрузки карточки";
+                    cardBackText.textContent = "Ошибка загрузки карточки";
                 }
 
                 flashcard.classList.remove('is-flipped'); // <<< Убедимся, что всегда показываем лицевую сторону следующей карточки
@@ -1654,29 +1688,29 @@
             }
 
             function flipCard() {
-                 if (currentDeck.length === 0) return;
+                if (currentDeck.length === 0) return;
                 flashcard.classList.toggle('is-flipped');
             }
 
             function nextCard() {
                 if (currentDeck.length === 0) {
-                     return;
+                    return;
                 }
-                 const nextIndex = (currentCardIndex + 1) % currentDeck.length;
+                const nextIndex = (currentCardIndex + 1) % currentDeck.length;
                 displayCard(nextIndex);
             }
 
             function prevCard() {
-                 if (currentDeck.length === 0) {
-                      return;
-                 }
-                 const prevIndex = (currentCardIndex - 1 + currentDeck.length) % currentDeck.length;
+                if (currentDeck.length === 0) {
+                    return;
+                }
+                const prevIndex = (currentCardIndex - 1 + currentDeck.length) % currentDeck.length;
                 displayCard(prevIndex);
             }
 
             function shuffleCards() {
                 if (cards.length === 0 || isReviewMode) {
-                     return;
+                    return;
                 }
 
                 isReviewMode = false;
@@ -1685,7 +1719,7 @@
 
                 shuffledOrder = Array.from({ length: cards.length }, (_, i) => i);
 
-                 // Алгоритм перемешивания Фишера-Йетса
+                // Алгоритм перемешивания Фишера-Йетса
                 for (let i = shuffledOrder.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [shuffledOrder[i], shuffledOrder[j]] = [shuffledOrder[j], shuffledOrder[i]]; // меняем местами
@@ -1696,53 +1730,53 @@
                 displayCard(currentCardIndex); // Обновляем дисплей
             }
 
-             // --- Режим повторения ---
-             function toggleReviewMode() {
-                 if (cards.length === 0) {
-                     return;
-                 }
+            // --- Режим повторения ---
+            function toggleReviewMode() {
+                if (cards.length === 0) {
+                    return;
+                }
 
-                 stopTimer();
+                stopTimer();
 
-                 if (!isReviewMode) { // Переключаемся в режим повторения
-                     const reviewCards = cards.filter(card => card.status === 'review');
-                     if (reviewCards.length === 0) {
-                         alert("Нет карточек, требующих повторения.");
-                         startTimer(); // Возобновляем таймер
-                         return;
-                     }
-                     isReviewMode = true;
-                     currentDeck = reviewCards; // Теперь currentDeck только для повторения
-                     shuffleButton.disabled = true;
-                     toggleReviewModeButton.textContent = `Показать все (${cards.length})`; // Показываем общее кол-во при выходе
-                     currentCardIndex = 0; // Начинаем сначала колоды повторения
-                 } else { // Переключаемся обратно в обычный режим
-                     isReviewMode = false;
-                     currentDeck = cards; // Возвращаемся к полной колоде
-                     isShuffled = false; // Сбрасываем перемешивание при выходе из режима повторения
-                     shuffledOrder = Array.from({ length: cards.length }, (_, i) => i); // Возвращаем исходный порядок
-                     shuffleButton.disabled = false;
-                     const reviewCount = cards.filter(card => card.status === 'review').length;
-                     toggleReviewModeButton.textContent = `Повторить (${reviewCount})`; // Обновляем счетчик
-                      currentCardIndex = 0; // Начинаем сначала полной колоды
-                 }
+                if (!isReviewMode) { // Переключаемся в режим повторения
+                    const reviewCards = cards.filter(card => card.status === 'review');
+                    if (reviewCards.length === 0) {
+                        alert("Нет карточек, требующих повторения.");
+                        startTimer(); // Возобновляем таймер
+                        return;
+                    }
+                    isReviewMode = true;
+                    currentDeck = reviewCards; // Теперь currentDeck только для повторения
+                    shuffleButton.disabled = true;
+                    toggleReviewModeButton.textContent = `Показать все (${cards.length})`; // Показываем общее кол-во при выходе
+                    currentCardIndex = 0; // Начинаем сначала колоды повторения
+                } else { // Переключаемся обратно в обычный режим
+                    isReviewMode = false;
+                    currentDeck = cards; // Возвращаемся к полной колоде
+                    isShuffled = false; // Сбрасываем перемешивание при выходе из режима повторения
+                    shuffledOrder = Array.from({ length: cards.length }, (_, i) => i); // Возвращаем исходный порядок
+                    shuffleButton.disabled = false;
+                    const reviewCount = cards.filter(card => card.status === 'review').length;
+                    toggleReviewModeButton.textContent = `Повторить (${reviewCount})`; // Обновляем счетчик
+                    currentCardIndex = 0; // Начинаем сначала полной колоды
+                }
 
-                 displayCard(currentCardIndex); // Отображаем первую карточку новой колоды
-                 startTimer();
-             }
+                displayCard(currentCardIndex); // Отображаем первую карточку новой колоды
+                startTimer();
+            }
 
 
             // --- Status ---
             function markCard(status) {
-                 if (currentDeck.length === 0 || !flashcard.classList.contains('is-flipped')) {
-                     return;
-                 }
+                if (currentDeck.length === 0 || !flashcard.classList.contains('is-flipped')) {
+                    return;
+                }
 
                 const currentCardOnDisplay = getCardData(currentCardIndex);
 
                 if (!currentCardOnDisplay) {
-                     console.error("[markCard] Could not get card data for current index.");
-                     return;
+                    console.error("[markCard] Could not get card data for current index.");
+                    return;
                 }
 
                 // Находим эту карточку в оригинальном массиве cards, чтобы обновить ее статус там
@@ -1753,125 +1787,146 @@
                     originalCard.status = status; // Обновляем статус в оригинальном массиве
 
 
-                     // Если мы в режиме повторения И статус изменился с 'review' на что-то другое,
-                     // удаляем карточку из currentDeck
-                     if (isReviewMode && oldStatus === 'review' && status !== 'review') {
-                          currentDeck = currentDeck.filter(c => c.id !== originalCard.id);
+                    // Если мы в режиме повторения И статус изменился с 'review' на что-то другое,
+                    // удаляем карточку из currentDeck
+                    if (isReviewMode && oldStatus === 'review' && status !== 'review') {
+                        currentDeck = currentDeck.filter(c => c.id !== originalCard.id);
 
-                          // Корректируем currentCardIndex, если он стал невалидным после удаления
-                           if (currentDeck.length === 0) {
-                               currentCardIndex = 0; // Колода стала пустой
-                           } else if (currentCardIndex >= currentDeck.length) {
-                              currentCardIndex = currentDeck.length - 1; // Adjust index if it's now out of bounds
-                           } else {
-                               // Индекс остался валидным, остаемся на нем, displayCard покажет следующую по кругу
-                           }
+                        // Корректируем currentCardIndex, если он стал невалидным после удаления
+                        if (currentDeck.length === 0) {
+                            currentCardIndex = 0; // Колода стала пустой
+                        } else if (currentCardIndex >= currentDeck.length) {
+                            currentCardIndex = currentDeck.length - 1; // Adjust index if it's now out of bounds
+                        } else {
+                            // Индекс остался валидным, остаемся на нем, displayCard покажет следующую по кругу
+                        }
 
-                     } else {
-                         // Не в режиме повторения ИЛИ статус остался 'review'
-                         // В этих случаях мы ДОЛЖНЫ перейти к следующей карточке в текущей колоде.
-                         currentCardIndex = (currentCardIndex + 1) % currentDeck.length; // ИСПРАВЛЕНИЕ ПЕРЕХОДА!
-                     }
+                    } else {
+                        // Не в режиме повторения ИЛИ статус остался 'review'
+                        // В этих случаях мы ДОЛЖНЫ перейти к следующей карточке в текущей колоде.
+                        currentCardIndex = (currentCardIndex + 1) % currentDeck.length; // ИСПРАВЛЕНИЕ ПЕРЕХОДА!
+                    }
 
 
-                     updateStats(); // Обновляем статистику (основываясь на полном массиве cards)
-                     checkCompletion(); // Проверяем, все ли изучено
+                    updateStats(); // Обновляем статистику (основываясь на полном массиве cards)
+                    checkCompletion(); // Проверяем, все ли изучено
 
-                     // Переходим к следующей карточке в текущей (возможно, уменьшенной) колоде
-                     // displayCard сам скорректирует индекс, если он вышел за пределы,
-                     // и покажет лицевую сторону.
-                     displayCard(currentCardIndex); // displayCard отобразит карточку по новому индексу и покажет лицевую сторону
+                    // Переходим к следующей карточке в текущей (возможно, уменьшенной) колоде
+                    // displayCard сам скорректирует индекс, если он вышел за пределы,
+                    // и покажет лицевую сторону.
+                    displayCard(currentCardIndex); // displayCard отобразит карточку по новому индексу и покажет лицевую сторону
                 } else {
-                     console.error("[markCard] Original card not found in 'cards' array.");
+                    console.error("[markCard] Original card not found in 'cards' array.");
                 }
             }
 
-             // --- Statistics ---
-             function updateStats() {
-                 const total = cards.length;
-                 const learnedCount = cards.filter(card => card.status === 'learned').length;
-                 const reviewCount = cards.filter(card => card.status === 'review').length;
-                 const unseenCount = cards.filter(card => card.status === 'unseen').length;
-                 const seenCount = total - unseenCount;
+            // --- Statistics ---
+            function updateStats() {
+                const total = cards.length;
+                const learnedCount = cards.filter(card => card.status === 'learned').length;
+                const reviewCount = cards.filter(card => card.status === 'review').length;
+                const unseenCount = cards.filter(card => card.status === 'unseen').length;
+                const seenCount = total - unseenCount;
 
-                 // Обновляем сводную статистику в хедере
-                 cardCountsDisplay.textContent = `И: ${learnedCount}, П: ${reviewCount}, В: ${total}`;
+                // Обновляем сводную статистику в хедере
+                cardCountsDisplay.textContent = `И: ${learnedCount}, П: ${reviewCount}, В: ${total}`;
 
 
-                 // Обновляем подробную статистику в блоке статистики
-                 totalCardsStats.textContent = total;
-                 learnedStats.textContent = learnedCount;
-                 reviewStats.textContent = reviewCount;
-                 seenStats.textContent = seenCount;
+                // Обновляем подробную статистику в блоке статистики
+                totalCardsStats.textContent = total;
+                learnedStats.textContent = learnedCount;
+                reviewStats.textContent = reviewCount;
+                seenStats.textContent = seenCount;
 
-                 // Обновляем текст кнопки "Повторить" со актуальным числом карточек на повторении
-                 // В режиме "Показать все" текст уже другой
-                 if (!isReviewMode) {
-                     toggleReviewModeButton.textContent = `Повторить (${reviewCount})`;
-                 }
-             }
+                // Обновляем текст кнопки "Повторить" со актуальным числом карточек на повторении
+                // В режиме "Показать все" текст уже другой
+                if (!isReviewMode) {
+                    toggleReviewModeButton.textContent = `Повторить (${reviewCount})`;
+                }
+            }
 
-             function toggleStatsVisibility() {
-                  const isHidden = statsArea.style.display === 'none';
-                  statsArea.style.display = isHidden ? 'block' : 'none';
-                  toggleStatsButton.textContent = isHidden ? 'Скрыть статистику' : 'Показать статистику';
-             }
+            function toggleStatsVisibility() {
+                const isHidden = statsArea.style.display === 'none';
+                statsArea.style.display = isHidden ? 'block' : 'none';
+                toggleStatsButton.textContent = isHidden ? 'Скрыть статистику' : 'Показать статистику';
+            }
 
-             // --- Completion Logic ---
-             function checkCompletion() {
-                 const allLearned = cards.length > 0 && cards.every(card => card.status === 'learned');
-                 if (allLearned) {
-                     showCompletionMessage();
-                 }
-             }
+            // --- Completion Logic ---
+            function checkCompletion() {
+                const allLearned = cards.length > 0 && cards.every(card => card.status === 'learned');
+                if (allLearned) {
+                    showCompletionMessage();
+                }
+            }
 
-             function showCompletionMessage() {
-                 stopTimer();
-                 finalTimeDisplay.textContent = formatTime(secondsElapsed);
-                 completionModal.classList.add('visible');
-                 document.body.style.overflow = 'hidden';
-             }
+            function showCompletionMessage() {
+                stopTimer();
+                finalTimeDisplay.textContent = formatTime(secondsElapsed);
+                completionModal.classList.add('visible');
+                document.body.style.overflow = 'hidden';
+            }
 
-             function hideCompletionMessage() {
-                 completionModal.classList.remove('visible');
-                 document.body.style.overflow = '';
-             }
+            function hideCompletionMessage() {
+                completionModal.classList.remove('visible');
+                document.body.style.overflow = '';
+            }
 
             // --- Reset Functionality ---
             function resetApp() {
-                 // Сбрасываем статусы всех карточек на 'unseen'
-                 // Создаем НОВЫЙ массив карточек с исходными статусами
-                 cards = cards;
+                // Сбрасываем статусы всех карточек на 'unseen'
+                // Создаем НОВЫЙ массив карточек с исходными статусами
+                cards = cards.map(card => ({ ...card, status: 'unseen' })); // Reset status to unseen
 
-                 // Сбрасываем все связанные состояния
-                 isReviewMode = false;
-                 isShuffled = false;
-                 currentDeck = cards; // Возвращаемся к полной колоде
-                 shuffledOrder = Array.from({ length: cards.length }, (_, i) => i); // Сбрасываем порядок перемешивания
-                 currentCardIndex = 0;
-                 resetTimer(); // Сбрасываем и запускаем таймер заново
+                // Сбрасываем все связанные состояния
+                isReviewMode = false;
+                isShuffled = false;
+                currentDeck = cards; // Возвращаемся к полной колоде
+                shuffledOrder = Array.from({ length: cards.length }, (_, i) => i); // Сбрасываем порядок перемешивания
+                currentCardIndex = 0;
+                resetTimer(); // Сбрасываем и запускаем таймер заново
 
-                 // Обновляем UI (текст кнопок, статистика)
-                 updateStats(); // updateStats обновит текст кнопки "Повторить" и сводную статистику
-                 shuffleButton.disabled = false; // Включаем кнопку перемешать
-                 toggleReviewModeButton.disabled = false; // Включаем кнопку повторения
+                // Обновляем UI (текст кнопок, статистика)
+                updateStats(); // updateStats обновит текст кнопки "Повторить" и сводную статистику
+                shuffleButton.disabled = false; // Включена по умолчанию
+                toggleReviewModeButton.disabled = false; // Включена по умолчанию
+                searchButton.disabled = false; // Enable search button
 
 
-                 // Перемешиваем и отображаем первую карточку
-                 shuffleCards(); // shuffleCards вызовет displayCard
+                // Перемешиваем и отображаем первую карточку
+                shuffleCards(); // shuffleCards вызовет displayCard
             }
 
             // --- "Начать заново" после завершения ---
             function startOverFromCompletion() {
-                 hideCompletionMessage(); // Скрываем модальное окно
-                 resetApp(); // Вызываем основную функцию сброса
+                hideCompletionMessage(); // Скрываем модальное окно
+                resetApp(); // Вызываем основную функцию сброса
             }
-
 
             // --- Theme Toggle ---
             function toggleTheme() {
                 document.body.classList.toggle('dark-mode');
             }
+
+            // --- Search Functionality ---
+            function searchCardText() {
+                let textToSearch = '';
+                // Check which face is currently visible
+                if (flashcard.classList.contains('is-flipped')) {
+                    textToSearch = cardBackText.textContent;
+                } else {
+                    textToSearch = cardFrontText.textContent;
+                }
+
+                if (textToSearch) {
+                    // Encode the text for the URL
+                    const encodedText = encodeURIComponent(textToSearch);
+                    // Construct the Google search URL
+                    const googleSearchUrl = `https://www.google.com/search?q=${encodedText}`;
+                    // Open in a new tab
+                    window.open(googleSearchUrl, '_blank');
+                }
+            }
+
 
             // --- Event Listeners ---
             flashcard.addEventListener('click', flipCard);
@@ -1885,60 +1940,61 @@
             themeToggleButton.addEventListener('click', toggleTheme);
             toggleStatsButton.addEventListener('click', toggleStatsVisibility);
             resetAppButton.addEventListener('click', resetApp); // Слушатель для кнопки внизу
+            searchButton.addEventListener('click', searchCardText); // Add event listener for the search button
 
 
             actionButtons.forEach(button => {
                 button.addEventListener('click', (event) => {
-                     event.stopPropagation(); // Предотвращаем переворот карточки
-                     markCard(button.dataset.status);
+                    event.stopPropagation(); // Предотвращаем переворот карточки
+                    markCard(button.dataset.status);
                 });
             });
 
-             // Слушатель для кнопки "Начать заново" в модальном окне
-             startOverButton.addEventListener('click', startOverFromCompletion);
+            // Слушатель для кнопки "Начать заново" в модальном окне
+            startOverButton.addEventListener('click', startOverFromCompletion);
 
-             // Закрытие модального окна при клике вне контента
-             completionModal.addEventListener('click', (event) => {
-                 if (event.target === completionModal) {
-                     // При желании, можно добавить закрытие по клику вне:
-                     // hideCompletionMessage();
-                 }
-             });
+            // Закрытие модального окна при клике вне контента
+            completionModal.addEventListener('click', (event) => {
+                if (event.target === completionModal) {
+                    // При желании, можно добавить закрытие по клику вне:
+                    // hideCompletionMessage();
+                }
+            });
 
 
-             // --- Keyboard Navigation ---
-             document.addEventListener('keydown', (event) => {
-                 // Если модальное окно видимо, обрабатываем только Enter/Space
-                 if (completionModal.classList.contains('visible')) {
-                     if (event.code === 'Enter' || event.code === 'Space') {
-                         event.preventDefault();
-                         startOverButton.click(); // Эмулируем клик по кнопке
-                     }
-                     return; // Игнорируем другие нажатия клавиш
-                 }
+            // --- Keyboard Navigation ---
+            document.addEventListener('keydown', (event) => {
+                // Если модальное окно видимо, обрабатываем только Enter/Space
+                if (completionModal.classList.contains('visible')) {
+                    if (event.code === 'Enter' || event.code === 'Space') {
+                        event.preventDefault();
+                        startOverButton.click(); // Эмулируем клик по кнопке
+                    }
+                    return; // Игнорируем другие нажатия клавиш
+                }
 
-                 // Навигация (стрелки влево/вправо)
-                 if (event.code === 'ArrowLeft') {
-                     event.preventDefault();
-                     prevCard();
-                 } else if (event.code === 'ArrowRight') {
-                     event.preventDefault();
-                     nextCard();
-                 }
-                 // Переворот (Пробел)
-                 else if (event.code === 'Space') {
-                     event.preventDefault(); // Предотвращаем прокрутку страницы
-                     flipCard();
-                 }
-                  // Добавить обработку клавиш 1, 2 и т.д. для отметки статуса, если нужно
-             });
+                // Навигация (стрелки влево/вправо)
+                if (event.code === 'ArrowLeft') {
+                    event.preventDefault();
+                    prevCard();
+                } else if (event.code === 'ArrowRight') {
+                    event.preventDefault();
+                    nextCard();
+                }
+                // Переворот (Пробел)
+                else if (event.code === 'Space') {
+                    event.preventDefault(); // Предотвращаем прокрутку страницы
+                    flipCard();
+                }
+                // Добавить обработку клавиш 1, 2 и т.д. для отметки статуса, если нужно
+            });
 
 
             // --- Initialization ---
             // Инициализация состояний по умолчанию при загрузке страницы
             // Массив cards уже определен выше с начальными статусами
             cards = cards;
-			
+
             currentDeck = cards; // По умолчанию показываем все
             shuffledOrder = Array.from({ length: cards.length }, (_, i) => i);
             isShuffled = false;
@@ -1949,6 +2005,7 @@
             toggleStatsButton.textContent = 'Показать статистику';
             shuffleButton.disabled = false; // Включена по умолчанию
             toggleReviewModeButton.disabled = false; // Включена по умолчанию
+            searchButton.disabled = false; // Enable search button initially
 
 
             displayCard(currentCardIndex); // Отображаем начальную карточку (она вызовет updateStats)
