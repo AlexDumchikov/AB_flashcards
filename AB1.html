@@ -3,713 +3,1156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Флеш-карты по A/B Тестированию</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>Flash Cards App</title>
     <style>
         :root {
-            --primary-color: #6200ea; /* Фиолетовый */
-            --primary-light: #d1c4e9;  /* Светло-фиолетовый */
-            --secondary-color: #03dac6; /* Бирюзовый */
-            --secondary-light: #b2ebf2;
-            --background-color: #f3e5f5; /* Светло-розовый */
-            --card-background-color: #ffffff;
-            --text-color: #212121; /* Темно-серый */
-            --light-text-color: #757575;
-            --shadow-color: rgba(0, 0, 0, 0.2);
-            --border-radius: 16px; /* Увеличенный радиус */
-            --button-radius: 8px;
-            --transition-duration: 0.3s;
-            --font-family: 'Roboto', sans-serif;
+            --background-color: #ffffff;
+            --text-color: #333333;
+            --card-background: #f9f9f9;
+            --card-border: #dddddd;
+            --button-background: #007bff;
+            --button-text: #ffffff;
+            --button-background-hover: #0056b3;
+            --learned-button: #28a745;
+            --learned-button-hover: #218838;
+            --review-button: #dc3545;
+            --review-button-hover: #c82333;
+            --reset-button: #6c757d; /* Цвет для кнопки сброса */
+            --reset-button-hover: #5a6268;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --overlay-background: rgba(0, 0, 0, 0.5);
+            --modal-background: #ffffff;
+            --modal-text: #333333;
+        }
+
+        body.dark-mode {
+            --background-color: #1e1e1e;
+            --text-color: #f0f0f0; /* Светлый текст */
+            --card-background: #333333; /* Темный фон карточки */
+            --card-border: #555555;
+            --button-background: #0056b3;
+            --button-text: #ffffff;
+            --button-background-hover: #003f80;
+            --learned-button: #218838;
+            --learned-button-hover: #1e7e34;
+            --review-button: #c82333;
+            --review-button-hover: #bd2130;
+            --reset-button: #5a6268;
+            --reset-button-hover: #6c757d;
+            --shadow-color: rgba(255, 255, 255, 0.1);
+            --overlay-background: rgba(0, 0, 0, 0.7);
+            --modal-background: #333333;
+            --modal-text: #f0f0f0;
         }
 
         body {
-            font-family: var(--font-family);
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px; /* Общий отступ по краям */
             background-color: var(--background-color);
+            color: var(--text-color); /* Наследуется для всего текста по умолчанию */
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Изменено на flex-start */
             min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            box-sizing: border-box; /* Учитываем padding в общей ширине */
+            overflow-y: auto; /* Позволяет прокручивать страницу, если контент не помещается */
+        }
+
+        header {
+            text-align: center;
+            margin-top: 5px; /* Расстояние от верхнего края экрана (от inner padding body) */
+            margin-bottom: 5px; /* Расстояние до плашки */
+            width: 100%;
+            max-width: 600px;
+            display: flex; /* Используем Flexbox */
+            flex-direction: row; /* Элементы в строку по умолчанию */
+            flex-wrap: wrap; /* Разрешаем перенос строки на маленьких экранах */
+            align-items: center; /* Выравнивание по центру по вертикали */
+            justify-content: center; /* Центрируем группу элементов в строке */
+            gap: 10px; /* Промежуток в 10px между прямыми потомками header (h1 и .header-stats-timer) по горизонтали */
+            /* gap применяется ко всем промежуткам, включая вертикальные при wrap */
+            padding: 0 10px; /* Отступ по бокам */
             box-sizing: border-box;
         }
 
-        .controls-container {
-            display: flex;
-            justify-content: center; /* Центрирование кнопок */
-            gap: 16px; /* Увеличенный gap */
-            margin-bottom: 24px; /* Увеличенный margin */
+
+        header h1 {
+            color: var(--text-color);
+            margin: 0; /* Убираем margin */
+            font-size: 12px; /* Размер шрифта заголовка 12px */
+            flex-grow: 0; /* Заголовок не занимает все доступное пространство */
+            flex-shrink: 1; /* Позволяем ему сжиматься */
+            text-align: center; /* Центрируем текст заголовка */
+            min-width: 100px; /* Минимальная ширина */
+        }
+
+         /* Группа статистики и таймера */
+         .header-stats-timer {
+             display: flex;
+             align-items: center;
+             gap: 10px; /* Промежуток между статсами и таймером */
+             flex-wrap: nowrap; /* Предотвращаем перенос внутри группы */
+             flex-shrink: 0; /* Не сжимаем группу сильно */
+             min-width: auto; /* Ширина определяется содержимым */
+         }
+
+         #card-counts {
+             font-size: 1rem; /* Размер шрифта статистики */
+             color: var(--text-color);
+             white-space: nowrap; /* Предотвращаем перенос текста статистики */
+             flex-shrink: 1; /* Разрешаем сжиматься */
+             min-width: 0; /* Позволяем сжиматься меньше содержимого */
+             text-overflow: ellipsis; /* Добавляем многоточие */
+             overflow: hidden; /* Скрываем вылезающий текст */
+         }
+
+        #timer {
+             font-size: 1.2rem; /* Размер шрифта таймера */
+             font-weight: bold;
+             color: var(--text-color);
+             white-space: nowrap; /* Предотвращаем перенос текста таймера */
+             flex-shrink: 0; /* Не сжимаем таймер сильно */
+             min-width: auto; /* Ширина определяется содержимым */
+         }
+
+         /* Стили для кнопок в хедере (их нет в этой версии) */
+
+
+        main {
             width: 100%;
-            max-width: 600px; /* Ограничение ширины для центрирования на больших экранах */
-        }
-
-        .shuffle-button, .recheck-button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1.1em;
-            border-radius: var(--button-radius);
-            cursor: pointer;
-            transition: background-color var(--transition-duration), transform 0.2s ease;
-            box-shadow: 0 6px 12px var(--shadow-color); /* Увеличенная тень */
-            width: 100%; /* Кнопки занимают всю доступную ширину */
-            max-width: 280px; /* Максимальная ширина кнопок */
-            text-align: center;
-        }
-
-        .shuffle-button:hover, .recheck-button:hover {
-            background-color: var(--primary-light);
-            transform: translateY(-2px);
-        }
-
-        .shuffle-button:active, .recheck-button:active {
-            transform: translateY(0);
-            box-shadow: 0 3px 6px var(--shadow-color); /* Уменьшенная тень */
-        }
-
-        .recheck-button {
-            background-color: var(--secondary-color);
-        }
-
-        .recheck-button:hover {
-            background-color: var(--secondary-light);
-        }
-
-        .container {
-            perspective: 1000px;
-            width: 95%; /* Увеличено до 95% */
             max-width: 600px;
-            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1; /* Занимает доступное пространство */
+            justify-content: center; /* Центрируем контент по вертикали */
+            padding-bottom: 80px; /* Отступ снизу для кнопок управления внизу */
+        }
+
+        .card-container {
+            width: 100%;
+            perspective: 1000px; /* Для 3D эффекта переворота */
+            margin-bottom: 20px;
+            max-width: 400px; /* Ограничение ширины карточки */
+            height: 455px; /* Увеличена высота плашки на 30% от 350px */
+            flex-shrink: 0; /* Не сжимается */
         }
 
         .flashcard {
             width: 100%;
-            height: 400px; /* Увеличенная высота */
+            height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
-            cursor: pointer;
-            border-radius: var(--border-radius);
-            box-shadow: 0 12px 24px var(--shadow-color); /* Увеличенная тень */
+            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1); /* Плавный переход */
+            box-shadow: 0 4px 8px var(--shadow-color);
+            border-radius: 10px;
+            background-color: var(--card-background); /* Фон карточки */
+            border: 1px solid var(--card-border);
+            cursor: pointer; /* Показываем, что карточка кликабельна */
         }
 
-        .flashcard.flipped {
+        .flashcard.is-flipped {
             transform: rotateY(180deg);
         }
 
-        .flashcard-face {
+        .card-face {
             position: absolute;
             width: 100%;
             height: 100%;
-            backface-visibility: hidden;
+            backface-visibility: hidden; /* Скрываем обратную сторону */
+            /* === Используем Flexbox для центрирования содержимого === */
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 30px; /* Увеличенный padding */
-            box-sizing: border-box;
-            border-radius: var(--border-radius);
-            background-color: var(--card-background-color);
-            text-align: center;
-            overflow-y: auto;
-            border: 2px solid var(--primary-color);
+            flex-direction: column; /* Располагаем элементы вертикально */
+            justify-content: center; /* Центрируем содержимое вертикально */
+            align-items: center; /* Центрируем содержимое горизонтально */
+            padding: 20px;
+            text-align: center; /* Выравнивание текста по центру внутри блока */
+            border-radius: 10px;
+            overflow: hidden; /* Скрываем вылезающий контент */
+            box-sizing: border-box; /* Учитываем padding в размере */
+             color: var(--text-color); /* Явно указываем цвет текста карточки */
         }
 
-        .flashcard-front {
-             border: 3px solid var(--primary-color);
+        .card-front {
+            z-index: 2;
+            transform: rotateY(0deg);
         }
 
-        .flashcard-back {
+        .card-back {
             transform: rotateY(180deg);
-             border: 3px solid var(--secondary-color);
+            justify-content: space-between; /* Разносим текст и кнопки */
+            padding-bottom: 80px; /* Отступ для кнопок внизу */
+            /* box-sizing: border-box; already set in .card-face */
         }
 
-        .flashcard-face h2 {
-            margin-top: 0;
-            margin-bottom: 20px; /* Увеличенный margin */
-            font-size: 1.8em; /* Увеличенный размер шрифта */
-            color: var(--primary-color);
+        .card-text {
+            font-size: 1.5rem; /* Крупный шрифт */
+            margin: 0; /* Убираем стандартные margin */
+            overflow-y: auto; /* Добавляем прокрутку, если текст длинный */
+            word-break: break-word; /* Перенос длинных слов */
+            padding: 10px 0; /* Небольшой вертикальный отступ */
+            width: 100%; /* Занимает всю доступную ширину */
+             flex-grow: 1; /* Позволяет тексту занимать доступное пространство */
+             /* color: var(--text-color); Inherited from .card-face */
         }
+         .card-back .card-text {
+             margin-bottom: 20px; /* Отступ между текстом и кнопками на обратной стороне */
+              flex-grow: 0; /* Текст не должен занимать все место, чтобы оставить место кнопкам */
+              max-height: calc(100% - 60px); /* Грубая оценка высоты, чтобы кнопки поместились */
+         }
 
-        .flashcard-back h2 {
-             color: var(--secondary-color);
-        }
 
-        .flashcard-face p {
-            font-size: 1.1em;
-            line-height: 1.7; /* Увеличенный line-height */
-            color: var(--text-color);
-        }
-        .flashcard-back p{
-             font-size: 1.1em;
-             line-height: 1.7; /* Увеличенный line-height */
-        }
-
-        .navigation {
+        .card-actions {
+            position: absolute; /* Позиционируем абсолютно */
+            bottom: 20px; /* Прижимаем к низу */
+            left: 0;
+            right: 0;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 95%; /* Увеличено до 95% */
-            max-width: 600px;
-            margin-bottom: 20px;
+            justify-content: center;
+            gap: 15px; /* Промежуток между кнопками */
+            padding: 0 20px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            flex-wrap: nowrap; /* <<< Главное: предотвращаем перенос кнопок действий */
         }
 
-        .nav-button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1.1em;
-            border-radius: var(--button-radius);
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
             cursor: pointer;
-            transition: background-color var(--transition-duration), transform 0.2s ease;
-            box-shadow: 0 6px 12px var(--shadow-color); /* Увеличенная тень */
-             width: 30%; /* Кнопки занимают 30% */
-            min-width: 120px; /* Минимальная ширина 120px */
-            text-align: center;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s ease;
+            background-color: var(--button-background);
+            color: var(--button-text); /* Цвет текста на кнопках */
         }
 
-        .nav-button:hover {
-            background-color: var(--primary-light);
-            transform: translateY(-2px);
-             box-shadow: 0 8px 16px var(--shadow-color);
+        button:hover {
+            background-color: var(--button-background-hover);
         }
 
-        .nav-button:active {
-            transform: translateY(0);
-            box-shadow: 0 3px 6px var(--shadow-color);
+        .action-button {
+             flex-grow: 1; /* Кнопки действий занимают равное пространство */
+             max-width: 112.5px; /* <<< Уменьшена максимальная ширина на 25% (150 * 0.75) */
+             flex-shrink: 0; /* <<< Не сжимаются меньше минимального размера */
+             min-width: 60px; /* <<< Задаем минимальную ширину, чтобы текст был читаемым */
+             box-sizing: border-box; /* Учитываем padding в ширине */
+             /* Убраны flex-basis: auto и max-width: none из @media - они не нужны при nowrap */
         }
 
-        .nav-button:disabled {
-            background-color: #b0bec5; /* Серый */
-            cursor: not-allowed;
-            transform: translateY(0);
-            box-shadow: none;
+        .action-button.learned {
+            background-color: var(--learned-button);
+        }
+        .action-button.learned:hover {
+            background-color: var(--learned-button-hover);
         }
 
-        #counter {
-            font-size: 1.2em; /* Увеличенный размер шрифта */
-            font-weight: 500;
-            color: var(--light-text-color);
+        .action-button.review {
+            background-color: var(--review-button);
+        }
+        .action-button.review:hover {
+            background-color: var(--review-button-hover);
         }
 
-        .feedback-buttons {
-            display: flex;
-            justify-content: space-around;
+
+        .navigation, .controls {
+            margin-top: 20px;
             width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap; /* Перенос кнопок на маленьких экранах */
+        }
+
+        .navigation button, .controls button {
+             flex-basis: 150px; /* Минимальная ширина кнопок навигации/контроля */
+             flex-grow: 1; /* Позволяем растягиваться */
+             max-width: 200px; /* Максимальная ширина */
+        }
+
+         /* Стили для кнопок в controls, их стало 5 */
+         .controls button {
+             flex-basis: 100px; /* Скорректируем базовую ширину для 5 кнопок */
+             flex-grow: 1;
+             max-width: 150px; /* Скорректируем макс ширину */
+             font-size: 0.9rem; /* Слегка уменьшим шрифт */
+             padding: 8px 12px; /* Слегка уменьшим padding */
+             white-space: nowrap; /* Предотвращаем перенос текста внутри кнопок */
+         }
+
+        #reset-app {
+            background-color: var(--reset-button); /* Применяем цвет сброса к кнопке в controls */
+        }
+         #reset-app:hover {
+            background-color: var(--reset-button-hover);
+        }
+
+
+        .stats-area {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            background-color: var(--card-background); /* Фон статистики */
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+             color: var(--text-color); /* Цвет текста статистики */
+        }
+
+        /* Модальное окно завершения */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--overlay-background);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Поверх всего остального */
+            visibility: hidden; /* Скрыто по умолчанию */
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--modal-background);
+            color: var(--modal-text); /* Цвет текста в модальном окне */
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 90%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: var(--modal-text); /* Цвет заголовка в модальном окне */
+        }
+
+        .modal-content button {
             margin-top: 20px;
         }
 
-        .feedback-button {
-            padding: 10px 20px;
-            border-radius: var(--button-radius);
-            cursor: pointer;
-            transition: background-color var(--transition-duration), transform 0.2s ease;
-            font-size: 1em;
-            width: 40%;
-            text-align: center;
-            box-shadow: 0 4px 8px var(--shadow-color);
-        }
 
-        .feedback-button:hover {
-            transform: translateY(-2px);
-             box-shadow: 0 6px 12px var(--shadow-color);
-        }
-
-        .feedback-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px var(--shadow-color);
-        }
-
-        .know-button {
-            background-color: #4caf50; /* Зеленый */
-            color: white;
-            border: none;
-        }
-
-        .know-button:hover {
-            background-color: #66bb6a;
-        }
-
-        .dont-know-button {
-            background-color: #f44336; /* Красный */
-            color: white;
-            border: none;
-        }
-
-        .dont-know-button:hover {
-            background-color: #e57373;
-        }
-        .stats-container {
-            width: 95%;
-            max-width: 600px;
-            margin-top: 30px;
-            padding: 20px;
-            background-color: var(--card-background-color);
-            border-radius: var(--border-radius);
-            box-shadow: 0 6px 12px var(--shadow-color);
-            text-align: center;
-            font-size: 1.1em;
-            color: var(--text-color);
-            border: 2px solid var(--primary-color);
-        }
-
-        .stats-container p {
-            margin: 8px 0;
-        }
-
-        .reset-buttons-container {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-top: 24px;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .reset-button, .recheck-button-bottom {
-             background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1.1em;
-            border-radius: var(--button-radius);
-            cursor: pointer;
-            transition: background-color var(--transition-duration), transform 0.2s ease;
-            box-shadow: 0 6px 12px var(--shadow-color); /* Увеличенная тень */
-            width: 100%; /* Кнопки занимают всю доступную ширину */
-            max-width: 280px; /* Максимальная ширина кнопок */
-            text-align: center;
-        }
-
-        .reset-button:hover, .recheck-button-bottom:hover {
-            background-color: var(--primary-light);
-            transform: translateY(-2px);
-             box-shadow: 0 8px 16px var(--shadow-color);
-        }
-
-        .reset-button:active, .recheck-button-bottom:active {
-            transform: translateY(0);
-            box-shadow: 0 3px 6px var(--shadow-color);
-        }
-        .recheck-button-bottom{
-             background-color: var(--secondary-color);
-        }
-        .recheck-button-bottom:hover {
-            background-color: var(--secondary-light);
-        }
-
+        /* Responsive adjustments */
         @media (max-width: 600px) {
-            .flashcard {
-                height: 450px;
-            }
-            .flashcard-face h2 {
-                font-size: 1.6em;
-            }
-            .flashcard-face p {
-                font-size: 1em;
-            }
-             .navigation {
-                flex-direction: column;
-            }
-            .nav-button {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-            #counter{
-                margin-bottom: 15px;
-            }
-            .controls-container {
-                flex-direction: column;
-            }
-            .shuffle-button, .recheck-button {
-                max-width: 100%;
-            }
-             .feedback-buttons {
-                flex-direction: column;
-                gap: 16px;
-            }
-            .feedback-button {
-                width: 100%;
-                max-width: 280px;
-            }
-            .reset-buttons-container {
-                flex-direction: column;
-            }
-            .reset-button, .recheck-button-bottom{
+             /* Header позволяет перенос строки */
+             header {
+                 flex-direction: column; /* Элементы в колонку на маленьких экранах */
+                 gap: 5px; /* Расстояние 5px между элементами при вертикальном стеке */
+                 padding: 0 10px;
+                 align-items: stretch; /* Растягиваем элементы */
+             }
+
+             header h1 {
+                  font-size: 12px; /* Размер заголовка 12px на мобильном тоже */
+                  text-align: center;
+                  width: 100%; /* Занимает всю ширину */
+                  min-width: auto; /* Сбрасываем минимальную ширину */
+             }
+
+             .header-stats-timer {
+                 flex-wrap: wrap; /* Разрешаем перенос внутри группы */
+                 justify-content: center; /* Центрируем группу, когда она сама перенесена */
+                 width: 100%; /* Занимает всю ширину */
+                 gap: 10px; /* Расстояние между статсами и таймером внутри группы */
+             }
+
+             #card-counts, #timer {
+                 font-size: 0.9rem; /* Уменьшаем шрифт */
+                 text-align: center;
+                 flex-shrink: 1;
+                 min-width: auto; /* Сбрасываем мин ширину */
+                 width: auto; /* Ширина по содержимому */
+             }
+
+             /* Adjust main padding */
+             main {
+                 padding-top: 5px; /* Расстояние 5px после хедера на мобильном */
+             }
+
+
+            .card-container {
+                 height: 450px; /* Увеличена высота плашки на 30% от 300px на мобильном */
                  max-width: 100%;
             }
-        }
-         @media (max-width: 400px) {
-            .flashcard {
-                 height: 500px;
+
+            .card-text {
+                font-size: 1.3rem;
             }
+
+            button {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+
+             /* Controls остаются с переносом */
+             .navigation button, .controls button {
+                 flex-basis: auto;
+                 flex-grow: 1;
+                 max-width: none;
+             }
+
+             .card-actions {
+                 flex-direction: row; /* <<< Фиксируем в строку даже на мобильных */
+                 flex-wrap: nowrap; /* <<< Отключаем перенос */
+                 gap: 10px; /* Уменьшаем промежуток между кнопками действий */
+                 bottom: 10px;
+                 justify-content: center; /* Центрируем кнопки в строке */
+                 padding: 0 10px; /* Adjust padding */
+             }
+
+             .action-button {
+                  max-width: 112.5px; /* <<< Сохраняем уменьшенную макс ширину */
+                  min-width: 60px; /* <<< Сохраняем мин ширину */
+                  flex-grow: 1; /* Позволяем им делиться пространством */
+                  flex-shrink: 0; /* Не сжимаются меньше мин ширины */
+                  padding: 8px 10px; /* Уменьшаем padding */
+                  font-size: 0.8rem; /* Уменьшаем шрифт */
+             }
+
+
+             .card-back {
+                 padding-bottom: 110px;
+             }
+
+             .modal-content {
+                 padding: 20px;
+             }
+        }
+
+
+        /* Accessibility (basic keyboard focus indication) */
+        button:focus-visible {
+            outline: 2px solid var(--button-background-hover);
+            outline-offset: 2px;
+        }
+         #reset-app:focus-visible {
+            outline-color: var(--reset-button-hover);
+         }
+         .modal-content button:focus-visible {
+             outline-color: var(--button-background-hover); /* Или другой цвет для модальной кнопки */
          }
     </style>
 </head>
-<body>
-    <div class="controls-container">
-        <button class="shuffle-button" id="shuffle-button">Перемешать</button>
-        <button class="recheck-button" id="recheck-button">Повторить</button>
-    </div>
+<body class="dark-mode"> <header>
+        <h1>A/B TESTS</h1> <div class="header-stats-timer"> <div id="card-counts">И: 0, П: 0, В: 0</div>
+            <div id="timer">00:00</div>
+        </div>
+        </header>
 
-    <div class="container">
-        <div class="flashcard" id="flashcard">
-            <div class="flashcard-face flashcard-front">
-                <h2 id="card-front-title">Вопрос/Термин</h2>
-                <p id="card-front-content"></p>
-            </div>
-            <div class="flashcard-face flashcard-back">
-                <h2 id="card-back-title">Ответ/Определение</h2>
-                <p id="card-back-content"></p>
-                 <div class="feedback-buttons">
-                    <button class="feedback-button know-button">Знаю</button>
-                    <button class="feedback-button dont-know-button">Не знаю</button>
+    <main>
+        <div class="card-container">
+            <div class="flashcard" id="flashcard">
+                <div class="card-face card-front">
+                    <p class="card-text" id="card-front-text"></p>
+                </div>
+                <div class="card-face card-back">
+                    <p class="card-text" id="card-back-text"></p>
+                    <div class="card-actions">
+                        <button class="action-button learned" data-status="learned">Изучено</button>
+                        <button class="action-button review" data-status="review">Повторить</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="navigation">
-        <button class="nav-button" id="prev-button" disabled>Назад</button>
-        <span id="counter">1 / 100</span>
-        <button class="nav-button" id="next-button">Вперед</button>
-    </div>
-     <div class="stats-container" id="stats-container" style="display: none;">
-        <p>Пройдено: <span id="cards-passed">0</span></p>
-        <p>Знаю: <span id="cards-known">0</span></p>
-        <p>% Знаю: <span id="percent-known">0%</span></p>
-    </div>
-    <div class="reset-buttons-container" style="display: none;">
-        <button class="reset-button" id="reset-button">Начать заново</button>
-        <button class="recheck-button-bottom" id="recheck-button-bottom">Повторить Неизвестные</button>
+        <div class="navigation">
+            <button id="prev-card">&laquo; Назад</button>
+            <button id="next-card">&raquo; Вперед</button>
+        </div>
+
+        <div class="controls">
+            <button id="shuffle-cards">Перемешать</button> <button id="toggle-review-mode">Повторить (0)</button> <button id="toggle-stats">Показать статистику</button>
+             <button id="theme-toggle">Сменить тему</button>
+             <button id="reset-app">Сброс</button> </div>
+
+        <div class="stats-area" id="stats-area">
+            <h2>Статистика</h2>
+            <p>Всего карточек: <span id="total-cards-stats">0</span></p>
+            <p>Изучено: <span id="learned-stats">0</span></p>
+            <p>Требуют повторения: <span id="review-stats">0</span></p>
+            <p>Просмотрено: <span id="seen-stats">0</span></p>
+             </div>
+    </main>
+
+    <div class="modal-overlay" id="completion-modal">
+        <div class="modal-content">
+            <h2>Поздравляем!</h2>
+            <p>Вы изучили все карточки!</p>
+             <p>Ваше время: <span id="final-time">00:00</span></p>
+            <button id="start-over-button">Начать заново</button>
+        </div>
     </div>
 
     <script>
-        const flashcardsData = [
-            // 1-10: Основы A/B тестирования
-            { frontTitle: "Что такое A/B тестирование?", frontContent: "Также известное как сплит-тестирование.", backTitle: "Определение", backContent: "Метод сравнения двух версий веб-страницы, приложения или другого продукта (A и B) для определения, какая из них работает лучше с точки зрения достижения конкретной цели (например, конверсии)." },
-            { frontTitle: "Контрольная группа (Control)", frontContent: "Что это в A/B тесте?", backTitle: "Определение", backContent: "Исходная версия элемента или страницы, с которой сравнивается вариант. Обозначается как 'A'." },
-            { frontTitle: "Вариант (Variation/Challenger)", frontContent: "Что это в A/B тесте?", backTitle: "Определение", backContent: "Измененная версия элемента или страницы, которая тестируется против контрольной группы. Обозначается как 'B' (или C, D и т.д. в многовариантных тестах)." },
-            { frontTitle: "Гипотеза (Hypothesis)", frontContent: "Зачем она нужна?", backTitle: "Определение", backContent: "Четкое, проверяемое утверждение, которое предсказывает, как изменение повлияет на ключевую метрику. Пример: 'Изменение цвета кнопки CTA на зеленый увеличит конверсию на 5%'." },
-            { frontTitle: "Цель A/B тестирования", frontContent: "Какова основная задача?", backTitle: "Определение", backContent: "Принятие решений на основе данных для улучшения пользовательского опыта, повышения конверсии и достижения бизнес-целей." },
-            { frontTitle: "Метрика (Metric)", frontContent: "Что измеряем?", backTitle: "Определение", backContent: "Количественный показатель, используемый для оценки эффективности вариантов. Примеры: коэффициент конверсии, средний чек, показатель отказов." },
-            { frontTitle: "Коэффициент конверсии (Conversion Rate)", frontContent: "Как рассчитать?", backTitle: "Определение", backContent: "Процент пользователей, выполнивших желаемое целевое действие (например, покупка, регистрация) от общего числа посетителей." },
-            { frontTitle: "Статистическая значимость (Statistical Significance)", frontContent: "Почему это важно?", backTitle: "Определение", backContent: "Вероятность того, что наблюдаемая разница между вариантами не является случайной. Обычно используется p-value < 0.05 (т.е. 95% уверенности)." },
-            { frontTitle: "P-value", frontContent: "Что означает этот показатель?", backTitle: "Определение", backContent: "Вероятность получить наблюдаемые (или более экстремальные) результаты, если нулевая гипотеза верна (т.е. нет реальной разницы между вариантами). Низкий p-value (<0.05) указывает на статистическую значимость." },
-            { frontTitle: "Доверительный интервал (Confidence Interval)", frontContent: "Что он показывает?", backTitle: "Определение", backContent: "Диапазон значений, в котором, с определенной степенью уверенности (например, 95%), находится истинное значение метрики. Помогает оценить точность результатов." },
-
-            // 11-20: Типы тестов и элементы для тестирования
-            { frontTitle: "Сплит URL-тестирование (Split URL Testing)", frontContent: "Когда используется?", backTitle: "Определение", backContent: "Тип A/B теста, где варианты размещаются на разных URL-адресах. Используется для тестирования значительных изменений в дизайне или функциональности страницы." },
-            { frontTitle: "Многовариантное тестирование (Multivariate Testing - MVT)", frontContent: "Чем отличается от A/B?", backTitle: "Определение", backContent: "Тестирование нескольких изменений на одной странице одновременно для определения наилучшей комбинации элементов. Требует больше трафика, чем A/B тест." },
-            { frontTitle: "A/A тестирование", frontContent: "Зачем его проводить?", backTitle: "Определение", backContent: "Тест, при котором две идентичные версии страницы показываются разным сегментам аудитории. Используется для проверки корректности работы инструмента для A/B тестирования и определения базовой вариабельности." },
-            { frontTitle: "Элементы для тестирования: Заголовки (Headlines)", frontContent: "Почему они важны?", backTitle: "Влияние", backContent: "Первое, что видит пользователь. Тестирование разных формулировок, длины, наличия ключевых слов может значительно повлиять на вовлеченность." },
-            { frontTitle: "Элементы для тестирования: Призывы к действию (CTA)", frontContent: "Что можно менять?", backTitle: "Варианты", backContent: "Текст кнопки (например, 'Купить' vs 'Добавить в корзину'), цвет, размер, форма, расположение." },
-            { frontTitle: "Элементы для тестирования: Изображения и видео", frontContent: "Как они влияют?", backTitle: "Влияние", backContent: "Визуальный контент сильно влияет на восприятие. Тестируйте разные изображения, их качество, сюжет, наличие людей, использование видео." },
-            { frontTitle: "Элементы для тестирования: Текст (Copy)", frontContent: "Кроме заголовков?", backTitle: "Варианты", backContent: "Основной текст страницы, описания продуктов, списки преимуществ. Важны тон голоса, длина, структура, форматирование." },
-            { frontTitle: "Элементы для тестирования: Дизайн и макет (Layout)", frontContent: "Что можно изменять?", backTitle: "Варианты", backContent: "Расположение блоков, навигации, количество колонок, использование свободного пространства. Цель – улучшение юзабилити." },
-            { frontTitle: "Элементы для тестирования: Формы (Forms)", frontContent: "Как оптимизировать?", backTitle: "Варианты", backContent: "Количество полей, их названия, обязательность, тип ввода, дизайн кнопки отправки, наличие индикатора прогресса." },
-            { frontTitle: "Элементы для тестирования: Цены и предложения", frontContent: "Как тестировать?", backTitle: "Варианты", backContent: "Отображение цены (например, со скидкой), специальные предложения, бесплатная доставка, пакеты услуг. Требует осторожности и сегментации." },
-
-            // 21-30: Планирование и проведение тестов
-            { frontTitle: "Этап исследования (Research)", frontContent: "Что включает?", backTitle: "Действия", backContent: "Анализ веб-аналитики, тепловых карт, опросов пользователей, записей сессий для выявления проблемных зон и возможностей для улучшения." },
-            { frontTitle: "Формулировка гипотезы (Hypothesis Formulation)", frontContent: "Ключевые компоненты?", backTitle: "Компоненты", backContent: "Предполагаемое изменение, ожидаемый результат и причина, почему это изменение должно сработать (например, 'Если мы [изменение], то [ожидаемый результат], потому что [обоснование]')." },
-            { frontTitle: "Выбор метрик (Choosing Metrics)", frontContent: "Первичные и вторичные?", backTitle: "Типы", backContent: "Первичная метрика – главная цель теста (например, конверсия в покупку). Вторичные метрики – дополнительные показатели, которые могут быть затронуты (например, средний чек, показатель отказов)." },
-            { frontTitle: "Определение размера выборки (Sample Size Calculation)", frontContent: "Почему это важно?", backTitle: "Важность", backContent: "Необходимое количество посетителей для получения статистически значимых результатов. Зависит от базовой конверсии, ожидаемого подъема и уровня значимости." },
-            { frontTitle: "Минимально обнаруживаемый эффект (MDE - Minimum Detectable Effect)", frontContent: "Что это?", backTitle: "Определение", backContent: "Наименьшее изменение в конверсии (или другой метрике), которое вы хотите иметь возможность обнаружить с достаточной статистической мощностью." },
-            { frontTitle: "Статистическая мощность (Statistical Power)", frontContent: "Что это?", backTitle: "Определение", backContent: "Вероятность того, что тест правильно обнаружит реальную разницу между вариантами, если она существует (т.е. избежать ошибки II рода). Обычно стремятся к 80% или выше." },
-            { frontTitle: "Сегментация аудитории (Audience Segmentation)", frontContent: "Зачем нужна?", backTitle: "Цель", backContent: "Разделение посетителей на группы (например, новые vs вернувшиеся, по источнику трафика, по типу устройства) для анализа результатов теста для разных сегментов." },
-            { frontTitle: "Длительность теста (Test Duration)", frontContent: "Как определить?", backTitle: "Факторы", backContent: "Должен длиться достаточно долго, чтобы набрать нужный размер выборки и учесть цикличность бизнеса (например, полные недели). Обычно от 1-2 недель." },
-            { frontTitle: "Рандомизация (Randomization)", frontContent: "Почему критична?", backTitle: "Важность", backContent: "Обеспечение того, чтобы каждый посетитель имел равные шансы увидеть любой из вариантов, что исключает систематические ошибки и предвзятость." },
-            { frontTitle: "Инструменты для A/B тестирования", frontContent: "Примеры?", backTitle: "Платформы", backContent: "Google Optimize (закрыт), Optimizely, VWO, AB Tasty, Convert.com, кастомные решения." },
-
-            // 31-40: Анализ результатов и ошибки
-            { frontTitle: "Ошибка I рода (Type I Error / False Positive)", frontContent: "Что это?", backTitle: "Определение", backContent: "Ситуация, когда тест показывает, что вариант лучше контрольной группы, хотя на самом деле разницы нет (или вариант хуже). Вероятность такой ошибки равна уровню значимости (alpha)." },
-            { frontTitle: "Ошибка II рода (Type II Error / False Negative)", frontContent: "Что это?", backTitle: "Определение", backContent: "Ситуация, когда тест не обнаруживает реальную разницу между вариантами (т.е. вариант действительно лучше, но тест это не показал). Вероятность связана со статистической мощностью (1 - beta)." },
-            { frontTitle: "Подглядывание (Peeking Problem)", frontContent: "В чем проблема?", backTitle: "Проблема", backContent: "Преждевременная остановка теста, как только результаты кажутся значимыми. Это увеличивает вероятность ошибки I рода." },
-            { frontTitle: "Регрессия к среднему (Regression to the Mean)", frontContent: "Что означает?", backTitle: "Определение", backContent: "Явление, при котором экстремальные результаты при первом измерении имеют тенденцию быть ближе к среднему при последующих измерениях. Может ввести в заблуждение при анализе." },
-            { frontTitle: "Эффект новизны (Novelty Effect)", frontContent: "Как влияет?", backTitle: "Влияние", backContent: "Пользователи могут первоначально положительно реагировать на изменение просто потому, что оно новое, а не потому, что оно действительно лучше. Эффект со временем может исчезнуть." },
-            { frontTitle: "Эффект изменения (Change Aversion)", frontContent: "Противоположность эффекту новизны?", backTitle: "Влияние", backContent: "Постоянные пользователи могут негативно реагировать на изменения, к которым они не привыкли, даже если изменения объективно лучше. Требуется время на адаптацию." },
-            { frontTitle: "Сезонность и внешние факторы", frontContent: "Как учитывать?", backTitle: "Рекомендация", backContent: "Проводить тесты достаточно долго, чтобы сгладить краткосрочные колебания. Быть в курсе маркетинговых кампаний, праздников или других событий, которые могут повлиять на трафик и поведение." },
-            { frontTitle: "Валидность теста (Test Validity)", frontContent: "Что это?", backTitle: "Определение", backContent: "Степень, в которой результаты теста действительно отражают то, что они должны измерять, и могут быть обобщены. Включает внутреннюю и внешнюю валидность." },
-            { frontTitle: "Анализ сегментов после теста", frontContent: "Почему важен?", backTitle: "Цель", backContent: "Даже если общий результат не значим, один из вариантов мог показать хорошие результаты для определенного сегмента аудитории." },
-            { frontTitle: "Документирование результатов", frontContent: "Зачем нужно?", backTitle: "Польза", backContent: "Создание базы знаний о том, что работает, а что нет. Помогает избежать повторения ошибок и строить более сильные гипотезы в будущем." },
-
-            // 41-50: Продвинутые концепции
-            { frontTitle: "Байесовский подход (Bayesian Approach)", frontContent: "Альтернатива частотному?", backTitle: "Отличие", backContent: "Метод статистического вывода, который обновляет вероятность гипотезы по мере поступления новых данных. Позволяет говорить о вероятности того, что вариант B лучше варианта A." },
-            { frontTitle: "Частотный подход (Frequentist Approach)", frontContent: "Основной подход?", backTitle: "Характеристика", backContent: "Основан на p-value и доверительных интервалах. Оценивает вероятность получения данных при условии, что нулевая гипотеза верна." },
-            { frontTitle: "Проблема множественных сравнений (Multiple Comparisons Problem)", frontContent: "Когда возникает?", backTitle: "Суть", backContent: "При тестировании многих вариантов или многих метрик одновременно увеличивается вероятность ложноположительных результатов. Требуются поправки (например, поправка Бонферрони)." },
-            { frontTitle: "Lift (Подъем)", frontContent: "Что показывает?", backTitle: "Определение", backContent: "Относительное улучшение метрики варианта по сравнению с контрольной группой, выраженное в процентах. (Конверсия B - Конверсия A) / Конверсия A * 100%." },
-            { frontTitle: "ROI A/B тестирования", frontContent: "Как оценить?", backTitle: "Расчет", backContent: "Соотношение выгоды от внедрения выигрышного варианта (например, дополнительный доход) к затратам на проведение теста." },
-            { frontTitle: "Персонализация (Personalization)", frontContent: "Связь с A/B тестами?", backTitle: "Связь", backContent: "A/B тестирование может использоваться для проверки эффективности различных персонализированных вариантов контента для разных сегментов аудитории." },
-            { frontTitle: "Feature Flags (Флаги Функциональности)", frontContent: "Как используются?", backTitle: "Применение", backContent: "Механизм, позволяющий включать или выключать определенные функции для разных групп пользователей. Удобно для постепенного внедрения и A/B тестирования нового функционала." },
-            { frontTitle: "Время до конверсии (Time to Conversion)", frontContent: "Важная метрика?", backTitle: "Значение", backContent: "Помогает понять, как быстро пользователи совершают целевое действие после взаимодействия с вариантом. Может быть вторичной метрикой." },
-            { frontTitle: "Микроконверсии (Micro-conversions)", frontContent: "Что это?", backTitle: "Определение", backContent: "Небольшие шаги на пути к основной (макро) конверсии, например, подписка на рассылку, добавление товара в корзину, просмотр видео о продукте." },
-            { frontTitle: "Always Be Testing (Всегда тестируй)", frontContent: "Философия?", backTitle: "Принцип", backContent: "Культура непрерывной оптимизации, где тестирование является постоянным процессом для улучшения продукта и пользовательского опыта." },
-
-            // 51-60: Практические советы и лучшие практики
-            { frontTitle: "Тестируйте одно изменение за раз", frontContent: "Почему это важно?", backTitle: "Причина", backContent: "Если вы тестируете несколько изменений одновременно, вы не сможете определить, какое из них привело к изменению результата." },
-            { frontTitle: "Приоритезация тестов (Prioritization)", frontContent: "Как выбрать, что тестировать?", backTitle: "Методы", backContent: "Используйте фреймворки, такие как ICE (Impact, Confidence, Ease) или PIE (Potential, Importance, Ease), чтобы оценить потенциальную ценность и сложность каждого теста." },
-            { frontTitle: "Не останавливайте тест слишком рано", frontContent: "Последствия?", backTitle: "Риски", backContent: "Недостаточный размер выборки или неучет бизнес-циклов может привести к неверным выводам (см. 'Подглядывание')." },
-            { frontTitle: "Тестируйте на всех устройствах", frontContent: "Почему?", backTitle: "Обоснование", backContent: "Поведение пользователей может сильно отличаться на десктопах, планшетах и мобильных устройствах. Убедитесь, что ваши изменения корректно работают везде." },
-            { frontTitle: "Учитывайте скорость загрузки страницы", frontContent: "Влияние на тест?", backTitle: "Влияние", backContent: "Если вариант загружается медленнее контрольной группы, это может негативно повлиять на его результаты, даже если само изменение хорошее." },
-            { frontTitle: "Получайте качественную обратную связь", frontContent: "Кроме количественных данных?", backTitle: "Методы", backContent: "Опросы, юзабилити-тестирование, интервью с пользователями могут помочь понять 'почему' за цифрами A/B теста." },
-            { frontTitle: "Не бойтесь 'неудачных' тестов", frontContent: "Почему они тоже ценны?", backTitle: "Ценность", backContent: "Тесты, которые не показали улучшения или даже ухудшили метрики, все равно дают ценную информацию о том, что не работает для вашей аудитории." },
-            { frontTitle: "Повторяйте успешные тесты (Re-testing)", frontContent: "Зачем?", backTitle: "Цель", backContent: "Условия могут меняться (аудитория, рынок). Повторное тестирование выигрышных вариантов через некоторое время может подтвердить их эффективность или выявить необходимость новых изменений." },
-            { frontTitle: "Используйте понятные названия для тестов и вариантов", frontContent: "Для чего?", backTitle: "Польза", backContent: "Облегчает анализ, документирование и коммуникацию результатов внутри команды." },
-            { frontTitle: "Делитесь результатами с командой", frontContent: "Важность коммуникации?", backTitle: "Преимущества", backContent: "Способствует формированию культуры, основанной на данных, и генерации новых идей для тестирования." },
-
-            // 61-70: Метрики и KPI
-            { frontTitle: "Показатель отказов (Bounce Rate)", frontContent: "Что он означает?", backTitle: "Определение", backContent: "Процент посетителей, которые покинули сайт после просмотра только одной страницы. Высокий показатель отказов может указывать на проблемы с релевантностью или юзабилити." },
-            { frontTitle: "Средний чек (Average Order Value - AOV)", frontContent: "Как влияет на бизнес?", backTitle: "Значение", backContent: "Средняя сумма, которую клиент тратит за одну транзакцию. A/B тесты могут быть направлены на его увеличение." },
-            { frontTitle: "Доход на посетителя (Revenue Per Visitor - RPV)", frontContent: "Что это за метрика?", backTitle: "Определение", backContent: "Общий доход, деленный на общее количество уникальных посетителей. Помогает оценить общую ценность трафика." },
-            { frontTitle: "Клики (Clicks)", frontContent: "Простая, но важная метрика?", backTitle: "Применение", backContent: "Часто используется для оценки эффективности CTA, баннеров, ссылок. Является основой для CTR." },
-            { frontTitle: "Click-Through Rate (CTR)", frontContent: "Показатель кликабельности", backTitle: "Формула", backContent: "(Количество кликов / Количество показов) * 100%. Важен для оценки рекламы, элементов навигации, CTA." },
-            { frontTitle: "Engagement Rate (Показатель вовлеченности)", frontContent: "Что может включать?", backTitle: "Примеры", backContent: "Лайки, комментарии, репосты, время на странице, глубина просмотра. Зависит от контекста." },
-            { frontTitle: "Customer Lifetime Value (CLTV / LTV)", frontContent: "Пожизненная ценность клиента", backTitle: "Значение", backContent: "Прогнозируемый общий доход, который компания получит от одного клиента за все время сотрудничества. Важная долгосрочная метрика." },
-            { frontTitle: "Cost Per Acquisition (CPA) / Cost Per Conversion", frontContent: "Стоимость привлечения клиента/конверсии", backTitle: "Определение", backContent: "Затраты на маркетинг, деленные на количество привлеченных клиентов или совершенных конверсий. Цель – снижение CPA." },
-            { frontTitle: "Retention Rate (Коэффициент удержания)", frontContent: "Как измеряется?", backTitle: "Определение", backContent: "Процент клиентов, которые продолжают пользоваться продуктом или услугой в течение определенного периода времени." },
-            { frontTitle: "Churn Rate (Коэффициент оттока)", frontContent: "Противоположность Retention?", backTitle: "Определение", backContent: "Процент клиентов, которые прекращают пользоваться продуктом или услугой за определенный период. Цель – снижение Churn Rate." },
-
-            // 71-80: Юридические и этические аспекты
-            { frontTitle: "Информированное согласие (Informed Consent)", frontContent: "Важно ли в A/B тестах?", backTitle: "Этика", backContent: "В некоторых случаях, особенно при тестировании чувствительных изменений, может потребоваться информировать пользователей об участии в эксперименте, хотя чаще это не делается явно для сохранения естественности поведения." },
-            { frontTitle: "Конфиденциальность данных (Data Privacy)", frontContent: "Что нужно учитывать?", backTitle: "Аспекты", backContent: "Соблюдение законов о защите данных (например, GDPR, CCPA). Анонимизация или псевдонимизация персональных данных, используемых в аналитике." },
-            { frontTitle: "Негативный опыт пользователя", frontContent: "Риски тестирования?", backTitle: "Возможные проблемы", backContent: "Некоторые варианты могут ухудшить пользовательский опыт. Важно быстро выявлять и отключать такие варианты." },
-            { frontTitle: "Дискриминация (Discrimination)", frontContent: "Как избежать?", backTitle: "Этика", backContent: "Убедитесь, что сегментация и персонализация не приводят к несправедливому или дискриминационному отношению к определенным группам пользователей." },
-            { frontTitle: "Прозрачность (Transparency)", frontContent: "Нужна ли полная?", backTitle: "Баланс", backContent: "Хотя полная прозрачность о каждом тесте может повлиять на поведение, важно иметь четкие внутренние гайдлайны по этике тестирования." },
-            { frontTitle: "Тестирование цен", frontContent: "Этические соображения?", backTitle: "Осторожность", backContent: "Показ разных цен разным пользователям одновременно (ценовая дискриминация) может вызвать негативную реакцию. Часто тестируют на разных рынках или в разное время." },
-            { frontTitle: "Манипулятивные паттерны (Dark Patterns)", frontContent: "Чего следует избегать?", backTitle: "Примеры", backContent: "Использование A/B тестов для оптимизации обманных или манипулятивных интерфейсов, которые вводят пользователей в заблуждение или заставляют совершать нежелательные действия." },
-            { frontTitle: "Доступность (Accessibility)", frontContent: "Как учитывать в тестах?", backTitle: "Рекомендация", backContent: "Убедитесь, что все варианты (A и B) соответствуют стандартам веб-доступности (WCAG), чтобы не исключать пользователей с ограниченными возможностями." },
-            { frontTitle: "Влияние на меньшинства", frontContent: "Что если тест вредит небольшой группе?", backTitle: "Принцип", backContent: "Даже если общий результат положителен, важно анализировать влияние на различные сегменты и избегать значительного вреда для каких-либо групп пользователей." },
-            { frontTitle: "Ответственность за результаты", frontContent: "Кто несет?", backTitle: "Команда", backContent: "Команда, проводящая тест, и компания в целом несут ответственность за этические последствия внедряемых изменений." },
-
-            // 81-90: Распространенные ошибки и как их избежать
-            { frontTitle: "Слишком много одновременных тестов", frontContent: "В чем проблема?", backTitle: "Проблема", backContent: "Тесты могут влиять друг на друга (interaction effects), искажая результаты. Изолируйте тесты или используйте продвинутые методы для учета взаимодействий." },
-            { frontTitle: "Неправильная настройка целей (Goals)", frontContent: "К чему приводит?", backTitle: "Последствия", backContent: "Если цели в инструменте A/B тестирования настроены неверно, все собранные данные и выводы будут ошибочными." },
-            { frontTitle: "Игнорирование статистической незначимости", frontContent: "Что делать, если результат не значим?", backTitle: "Выводы", backContent: "Это означает, что на основе имеющихся данных нельзя утверждать о превосходстве одного варианта над другим. Это тоже результат, который говорит, что изменение не принесло ожидаемого эффекта." },
-            { frontTitle: "Слепое копирование чужих тестов", frontContent: "Почему это плохая идея?", backTitle: "Причина", backContent: "То, что сработало для одной компании с другой аудиторией и продуктом, может не сработать для вас. Всегда тестируйте идеи в своем контексте." },
-            { frontTitle: "Недостаточный трафик", frontContent: "Последствия?", backTitle: "Проблема", backContent: "Тесты будут длиться очень долго или не достигнут статистической значимости, делая выводы ненадежными." },
-            { frontTitle: "Изменение вариантов во время теста", frontContent: "Можно ли так делать?", backTitle: "Запрет", backContent: "Любые изменения в контрольной группе или варианте во время активного теста аннулируют его результаты." },
-            { frontTitle: "Неравномерное распределение трафика", frontContent: "К чему приводит?", backTitle: "Искажение", backContent: "Если трафик распределяется не случайно (например, 50/50), это может внести предвзятость в результаты. Убедитесь в корректной настройке сплита." },
-            { frontTitle: "Забыть о внешних событиях", frontContent: "Пример?", backTitle: "Влияние", backContent: "Праздники, рекламные кампании, сезонные тренды могут повлиять на результаты. Учитывайте их при планировании и анализе." },
-            { frontTitle: "Отсутствие мобильной оптимизации", frontContent: "Почему это критично?", backTitle: "Важность", backContent: "Большинство пользователей сейчас просматривают сайты с мобильных устройств. Тестирование только на десктопе даст неполную картину." },
-            { frontTitle: "Игнорирование времени загрузки", frontContent: "Как влияет на результаты?", backTitle: "Влияние", backContent: "Медленная загрузка страницы может привести к потере пользователей и исказить результаты A/B теста, особенно на мобильных устройствах." },
-
-            // 91-100: Будущее A/B тестирования
-            { frontTitle: "Персонализация на основе AI", frontContent: "Тенденция?", backTitle: "Направление", backContent: "Использование искусственного интеллекта для автоматической персонализации вариантов A/B тестов для разных пользователей в реальном времени." },
-            { frontTitle: "Автоматическая оптимизация", frontContent: "Заменит ли A/B тесты?", backTitle: "Будущее", backContent: "Инструменты машинного обучения могут автоматически перераспределять трафик в пользу более эффективных вариантов, но A/B тестирование останется важным для проверки новых гипотез." },
-            { frontTitle: "Голосовой поиск и A/B тестирование", frontContent: "Как это связано?", backTitle: "Новый вызов", backContent: "С ростом популярности голосового поиска возникает необходимость оптимизировать контент и пользовательский опыт для голосовых команд, что открывает новые возможности для A/B тестирования." },
-            { frontTitle: "Тестирование омниканального опыта", frontContent: "Что это значит?", backTitle: "Подход", backContent: "A/B тестирование выходит за рамки веба и приложений. Компании начинают тестировать согласованность и эффективность взаимодействия с клиентами через разные каналы (email, социальные сети, физические магазины)." },
-            { frontTitle: "Конфиденциальность и A/B тестирование", frontContent: "Новые ограничения?", backTitle: "Вызовы", backContent: "Ужесточение правил конфиденциальности (например, GDPR) требует новых подходов к сбору и использованию данных для A/B тестирования, например, использование дифференциальной приватности." },
-            { frontTitle: "Тестирование эмоционального воздействия", frontContent: "Как измерить эмоции?", backTitle: "Методы", backContent: "Использование нейромаркетинга, анализа выражений лица и других методов для оценки эмоциональной реакции пользователей на разные варианты и оптимизации пользовательского опыта на основе эмоций." },
-            { frontTitle: "A/B тестирование в B2B", frontContent: "Специфика?", backTitle: "Отличия", backContent: "В B2B циклах продаж решения часто принимаются командой, а не одним человеком. A/B тестирование должно учитывать сложные пути принятия решений и разные роли заинтересованных сторон." },
-            { frontTitle: "Тестирование UX-анимаций", frontContent: "Зачем тестировать анимации?", backTitle: "Оптимизация", backContent: "Анимации могут улучшить или ухудшить пользовательский опыт. A/B тестирование помогает определить, какие анимации наиболее эффективны для достижения целей." },
-            { frontTitle: "Интерактивное A/B тестирование", frontContent: "Что это?", backTitle: "Новый формат", backContent: "Пользователи могут взаимодействовать с разными элементами вариантов A и B (например, перетаскивать, изменять размер), а их действия записываются для анализа. Более глубокое понимание поведения." },
-            { frontTitle: "Будущее A/B тестирования", frontContent: "Ключевые тренды?", backTitle: "Направления", backContent: "Автоматизация, персонализация, омниканальность, учет эмоций, интерактивность, адаптация к новым технологиям (VR, AR, голосовой поиск) и изменениям в регулировании конфиденциальности." }
-        ];
-
-        let currentCardIndex = 0;
-        let cardsPassed = 0;
-        let cardsKnown = 0;
-        let knownCards = [];
-        let displayedCards = [];
-        let isRecheckMode = false;
-
-        const flashcardElement = document.getElementById('flashcard');
-        const frontTitleElement = document.getElementById('card-front-title');
-        const frontContentElement = document.getElementById('card-front-content');
-        const backTitleElement = document.getElementById('card-back-title');
-        const backContentElement = document.getElementById('card-back-content');
-        const prevButton = document.getElementById('prev-button');
-        const nextButton = document.getElementById('next-button');
-        const counterElement = document.getElementById('counter');
-        const shuffleButton = document.getElementById('shuffle-button');
-        const recheckButton = document.getElementById('recheck-button');
-        const statsContainer = document.getElementById('stats-container');
-        const cardsPassedElement = document.getElementById('cards-passed');
-        const cardsKnownElement = document.getElementById('cards-known');
-        const percentKnownElement = document.getElementById('percent-known');
-        const resetButton = document.getElementById('reset-button');
-        const recheckButtonBottom = document.getElementById('recheck-button-bottom');
-        const feedbackButtonsContainer = document.querySelector('.feedback-buttons');
+        document.addEventListener('DOMContentLoaded', () => {
+            const flashcard = document.getElementById('flashcard');
+            const cardFrontText = document.getElementById('card-front-text');
+            const cardBackText = document.getElementById('card-back-text');
+            const prevButton = document.getElementById('prev-card');
+            const nextButton = document.getElementById('next-card');
+            const shuffleButton = document.getElementById('shuffle-cards'); // Теперь внизу
+            const toggleReviewModeButton = document.getElementById('toggle-review-mode'); // Теперь внизу
+            const themeToggleButton = document.getElementById('theme-toggle'); // Внизу
+            const actionButtons = document.querySelectorAll('.card-actions .action-button');
+            const toggleStatsButton = document.getElementById('toggle-stats');
+            const statsArea = document.getElementById('stats-area');
+            const totalCardsStats = document.getElementById('total-cards-stats');
+            const learnedStats = document.getElementById('learned-stats');
+            const reviewStats = document.getElementById('review-stats');
+            const seenStats = document.getElementById('seen-stats');
+            const timerDisplay = document.getElementById('timer');
+            const completionModal = document.getElementById('completion-modal');
+            const startOverButton = document.getElementById('start-over-button');
+            const finalTimeDisplay = document.getElementById('final-time');
+            const resetAppButton = document.getElementById('reset-app'); // Теперь внизу
+            const cardCountsDisplay = document.getElementById('card-counts'); // Вверху
 
 
-        function displayCard(index) {
-            const card = displayedCards[index] || flashcardsData[index];
-            frontTitleElement.textContent = card.frontTitle;
-            frontContentElement.textContent = card.frontContent;
-            backTitleElement.textContent = card.backTitle;
-            backContentElement.textContent = card.backContent;
-            counterElement.textContent = `${index + 1} / ${displayedCards.length}`;
-            prevButton.disabled = index === 0;
-            nextButton.disabled = index === displayedCards.length - 1;
-            flashcardElement.classList.remove('flipped');
-            if (feedbackButtonsContainer) {
-                feedbackButtonsContainer.style.display = 'none';
+            // --- Sample Data ---
+            // Статусы сбрасываются при каждой загрузке, т.к. нет сохранения
+            let cards = [
+
+
+    { id: 'card-1', front: 'Что такое A/B-тестирование?', back: 'Метод сравнения двух версий чего-либо (например, веб-страницы) для определения, какая из них работает лучше.', status: 'unseen' },
+    { id: 'card-2', front: 'Какие основные цели A/B-тестирования?', back: 'Улучшение ключевых показателей (конверсия, кликабельность, продажи), снижение рисков при внедрении изменений, принятие решений на основе данных.', status: 'unseen' },
+    { id: 'card-3', front: 'Что такое контрольная группа в A/B-тесте?', back: 'Группа пользователей, которой показывают текущую (старую) версию.', status: 'unseen' },
+    { id: 'card-4', front: 'Что такое тестовая группа в A/B-тесте?', back: 'Группа пользователей, которой показывают новую (экспериментальную) версию.', status: 'unseen' },
+    { id: 'card-5', front: 'Что такое статистическая значимость?', back: 'Вероятность того, что разница в результатах между группами не случайна.', status: 'unseen' },
+    { id: 'card-6', front: 'Какие типы данных используются в A/B-тестах?', back: 'Бинарные (успех/неудача) и непрерывные (числовые значения).', status: 'unseen' },
+    { id: 'card-7', front: 'Какие тесты используют для бинарных данных?', back: 'Z-тест для пропорций, критерий хи-квадрат Пирсона, точный тест Фишера.', status: 'unseen' },
+    { id: 'card-8', front: 'Какие тесты используют для непрерывных данных?', back: 't-тест Стьюдента (для нормального распределения), тест Манна-Уитни (для ненормального распределения).', status: 'unseen' },
+    { id: 'card-9', front: 'Когда используют Z-тест для пропорций?', back: 'Для больших выборок, где количество успехов и неудач в каждой группе не менее 5-10.', status: 'unseen' },
+    { id: 'card-10', front: 'Когда используют точный тест Фишера?', back: 'Для малых выборок, когда ожидаемые частоты в таблице сопряженности меньше 5.', status: 'unseen' },
+    { id: 'card-11', front: 'Что такое p-value?', back: 'Вероятность получить наблюдаемую разницу (или более экстремальную) при условии, что нулевая гипотеза верна.', status: 'unseen' },
+    { id: 'card-12', front: 'Как интерпретировать p-value?', back: 'Если p-value < 0.05, разница статистически значима; если p-value ≥ 0.05, разница незначима.', status: 'unseen' },
+    { id: 'card-13', front: 'Что такое доверительный интервал?', back: 'Диапазон значений, в котором с определенной вероятностью находится истинное значение метрики.', status: 'unseen' },
+    { id: 'card-14', front: 'Что такое минимальный детектируемый эффект (MDE)?', back: 'Наименьший размер эффекта, который мы хотим обнаружить с заданной мощностью теста.', status: 'unseen' },
+    { id: 'card-15', front: 'Что такое мощность теста?', back: 'Вероятность правильно обнаружить статистически значимую разницу, если она существует.', status: 'unseen' },
+    { id: 'card-16', front: 'Какие факторы влияют на размер выборки?', back: 'Базовая конверсия, MDE, уровень значимости (α), мощность теста (1-β).', status: 'unseen' },
+    { id: 'card-17', front: 'Как избежать проблемы "подглядывания" (peeking)?', back: 'Не останавливать тест раньше времени, дождаться запланированного размера выборки.', status: 'unseen' },
+    { id: 'card-18', front: 'Что такое эффект новизны?', back: 'Пользователи могут реагировать на изменения только потому, что они новые, а не потому, что они лучше.', status: 'unseen' },
+    { id: 'card-19', front: 'Что такое A/A-тестирование?', back: 'Тест, где обе группы видят одинаковую версию, используется для проверки корректности системы.', status: 'unseen' },
+    { id: 'card-20', front: 'Какие метрики часто используют в A/B-тестах?', back: 'Коэффициент конверсии, CTR, показатель отказов, время на странице, средний чек.', status: 'unseen' },
+    { id: 'card-21', front: 'Как рассчитать коэффициент конверсии?', back: '(Количество конверсий / Общее количество посетителей) * 100%.', status: 'unseen' },
+    { id: 'card-22', front: 'Как рассчитать CTR?', back: '(Количество кликов / Количество показов элемента) * 100%.', status: 'unseen' },
+    { id: 'card-23', front: 'Как рассчитать показатель отказов?', back: '(Количество сеансов с одной страницей / Общее количество сеансов) * 100%.', status: 'unseen' },
+    { id: 'card-24', front: 'Что такое нулевая гипотеза (H0)?', back: 'Гипотеза об отсутствии значимых различий между группами.', status: 'unseen' },
+    { id: 'card-25', front: 'Что такое альтернативная гипотеза (H1)?', back: 'Гипотеза о наличии значимых различий между группами.', status: 'unseen' },
+    { id: 'card-26', front: 'Как сформулировать гипотезу для A/B-теста?', back: 'Если мы изменим [элемент], то [метрика] изменится [определенным образом].', status: 'unseen' },
+    { id: 'card-27', front: 'Почему важно тестировать одну переменную за раз?', back: 'Чтобы точно определить, какое изменение повлияло на результат.', status: 'unseen' },
+    { id: 'card-28', front: 'Как выбрать целевую аудиторию для теста?', back: 'Определить сегмент пользователей (например, новые или вернувшиеся) или тестировать на всех.', status: 'unseen' },
+    { id: 'card-29', front: 'Как рассчитать продолжительность теста?', back: 'Учитывать размер выборки, недельные циклы, сезонность и достижение необходимого трафика.', status: 'unseen' },
+    { id: 'card-30', front: 'Почему важна рандомизация в A/B-тестах?', back: 'Чтобы минимизировать систематические ошибки и обеспечить репрезентативность выборок.', status: 'unseen' },
+    { id: 'card-31', front: 'Какие Python-библиотеки используют для A/B-тестов?', back: 'scipy.stats, statsmodels, numpy, pandas.', status: 'unseen' },
+    { id: 'card-32', front: 'Как провести Z-тест для пропорций в Python?', back: 'Использовать функцию proportions_ztest из statsmodels.stats.proportion.', status: 'unseen' },
+    { id: 'card-33', front: 'Как провести t-тест в Python?', back: 'Использовать функцию ttest_ind из scipy.stats.', status: 'unseen' },
+    { id: 'card-34', front: 'Как провести критерий хи-квадрат в Python?', back: 'Использовать функцию chi2_contingency из scipy.stats.', status: 'unseen' },
+    { id: 'card-35', front: 'Как провести точный тест Фишера в Python?', back: 'Использовать функцию fisher_exact из scipy.stats.', status: 'unseen' },
+    { id: 'card-36', front: 'Как смоделировать данные для A/B-теста в Python?', back: 'Использовать numpy.random.binomial для бинарных данных или numpy.random.normal для непрерывных.', status: 'unseen' },
+    { id: 'card-37', front: 'Что такое байесовское A/B-тестирование?', back: 'Подход, который обновляет убеждения о эффективности вариантов на основе априорных знаний и данных.', status: 'unseen' },
+    { id: 'card-38', front: 'Что такое дилемма исследования и использования (Explore-Exploit)?', back: 'Компромисс между исследованием новых вариантов и использованием лучшего известного варианта.', status: 'unseen' },
+    { id: 'card-39', front: 'Что такое алгоритм ε-greedy?', back: 'Алгоритм, который с вероятностью 1-ε выбирает лучший вариант, а с вероятностью ε — случайный.', status: 'unseen' },
+    { id: 'card-40', front: 'Что такое алгоритм UCB1?', back: 'Алгоритм, который выбирает вариант с наибольшей верхней границей доверительного интервала.', status: 'unseen' },
+    { id: 'card-41', front: 'Как работает алгоритм UCB1?', back: 'UCB = средняя награда + c * √(ln(t) / n), где c — параметр, t — общее число итераций, n — число выборов варианта.', status: 'unseen' },
+    { id: 'card-42', front: 'Что такое Thompson Sampling?', back: 'Байесовский алгоритм, который выбирает вариант на основе случайной выборки из распределения вероятностей.', status: 'unseen' },
+    { id: 'card-43', front: 'Как работает Thompson Sampling?', back: 'Для каждого варианта генерируется случайное значение из его распределения, выбирается вариант с наибольшим значением.', status: 'unseen' },
+    { id: 'card-44', front: 'Какое распределение используют в Thompson Sampling для бинарных данных?', back: 'Бета-распределение (Beta(α, β)), где α — успехи + 1, β — неудачи + 1.', status: 'unseen' },
+    { id: 'card-45', front: 'Что такое контекстуальные бандиты (Contextual Bandits)?', back: 'Алгоритмы, которые учитывают контекст (например, данные пользователя) при выборе варианта.', status: 'unseen' },
+    { id: 'card-46', front: 'Что такое Softmax в контексте A/B-тестов?', back: 'Алгоритм, который назначает вероятность выбора варианта пропорционально его ожидаемой награде.', status: 'unseen' },
+    { id: 'card-47', front: 'Как сравнить UCB1 и Thompson Sampling?', back: 'UCB1 детерминирован, имеет теоретические гарантии; Thompson Sampling байесовский, часто лучше на практике.', status: 'unseen' },
+    { id: 'card-48', front: 'Что такое таблица сопряженности 2x2?', back: 'Таблица, которая показывает распределение успехов и неудач для двух групп в A/B-тесте.', status: 'unseen' },
+    { id: 'card-49', front: 'Как избежать ошибок в A/B-тестах?', back: 'Проверять корректность разделения трафика, учитывать внешние факторы, избегать подглядывания.', status: 'unseen' },
+    { id: 'card-50', front: 'Что такое сегментация результатов?', back: 'Анализ результатов для разных подгрупп пользователей (например, по устройству или географии).', status: 'unseen' },
+    { id: 'card-51', front: 'Как документировать A/B-тесты?', back: 'Фиксировать гипотезы, параметры теста, результаты, выводы и принятые решения.', status: 'unseen' },
+    { id: 'card-52', front: 'Что такое A/B/n-тестирование?', back: 'Тестирование более двух вариантов одновременно.', status: 'unseen' },
+    { id: 'card-53', front: 'Какие внешние факторы могут повлиять на A/B-тест?', back: 'Праздники, сезонность, маркетинговые кампании, изменения в продукте.', status: 'unseen' },
+    { id: 'card-54', front: 'Как интерпретировать отрицательные результаты A/B-теста?', back: 'Как ценные данные, которые помогают избежать неэффективных изменений.', status: 'unseen' },
+    { id: 'card-55', front: 'Какие этические аспекты есть в A/B-тестировании?', back: 'Не вводить пользователей в заблуждение, минимизировать негативное влияние на их опыт.', status: 'unseen' },
+    { id: 'card-56', front: 'Как выбрать уровень значимости (α) для теста?', back: 'Обычно используют α = 0.05, но можно выбрать другое значение в зависимости от контекста.', status: 'unseen' },
+    { id: 'card-57', front: 'Что такое ложноположительная ошибка (Type I error)?', back: 'Ошибочное отклонение нулевой гипотезы, когда она верна (ложное обнаружение эффекта).', status: 'unseen' },
+    { id: 'card-58', front: 'Что такое ложноотрицательная ошибка (Type II error)?', back: 'Неспособность отвергнуть нулевую гипотезу, когда она ложна (пропуск реального эффекта).', status: 'unseen' },
+    { id: 'card-59', front: 'Как уменьшить вероятность Type I ошибки?', back: 'Использовать более строгий уровень значимости (например, α = 0.01).', status: 'unseen' },
+    { id: 'card-60', front: 'Как увеличить мощность теста?', back: 'Увеличить размер выборки или допустимый MDE.', status: 'unseen' },
+    { id: 'card-61', front: 'Что такое базовый уровень конверсии?', back: 'Текущее значение метрики в контрольной группе до начала теста.', status: 'unseen' },
+    { id: 'card-62', front: 'Как рассчитать размер выборки для A/B-теста?', back: 'Использовать онлайн-калькуляторы или функции из statsmodels для расчета мощности.', status: 'unseen' },
+    { id: 'card-63', front: 'Почему важно учитывать недельные циклы в тестах?', back: 'Поведение пользователей может различаться в будни и выходные.', status: 'unseen' },
+    { id: 'card-64', front: 'Что такое многорукий бандит (Multi-Armed Bandit)?', back: 'Задача оптимизации, где нужно балансировать исследование и использование вариантов.', status: 'unseen' },
+    { id: 'card-65', front: 'Как алгоритмы бандитов отличаются от классических A/B-тестов?', back: 'Они динамически распределяют трафик, уменьшая потери на неэффективных вариантах.', status: 'unseen' },
+    { id: 'card-66', front: 'Что такое сожаление (regret) в задаче бандита?', back: 'Разница между наградой оптимального варианта и выбранного алгоритмом.', status: 'unseen' },
+    { id: 'card-67', front: 'Как работает ε-decreasing greedy?', back: 'Аналогично ε-greedy, но ε постепенно уменьшается со временем.', status: 'unseen' },
+    { id: 'card-68', front: 'Что такое параметр температуры в Softmax?', back: 'Параметр, который контролирует баланс между исследованием и эксплуатацией.', status: 'unseen' },
+    { id: 'card-69', front: 'Как температура влияет на Softmax?', back: 'Высокая температура увеличивает исследование, низкая — эксплуатацию.', status: 'unseen' },
+    { id: 'card-70', front: 'Что такое априорное распределение в байесовском подходе?', back: 'Наши предположения о параметрах до наблюдения данных.', status: 'unseen' },
+    { id: 'card-71', front: 'Что такое апостериорное распределение в байесовском подходе?', back: 'Обновленные убеждения о параметрах после наблюдения данных.', status: 'unseen' },
+    { id: 'card-72', front: 'Почему бета-распределение используют для бинарных данных?', back: 'Оно сопряжено с биномиальным распределением, что упрощает байесовское обновление.', status: 'unseen' },
+    { id: 'card-73', front: 'Как обновлять бета-распределение в Thompson Sampling?', back: 'При успехе: α += 1; при неудаче: β += 1.', status: 'unseen' },
+    { id: 'card-74', front: 'Что такое доверительные интервалы Хёффдинга?', back: 'Интервалы, которые гарантируют покрытие истинного значения с заданной вероятностью.', status: 'unseen' },
+    { id: 'card-75', front: 'Как UCB1 связан с доверительными интервалами?', back: 'UCB1 использует верхнюю границу доверительного интервала для выбора действия.', status: 'unseen' },
+    { id: 'card-76', front: 'Почему UCB1 считается алгоритмом обучения с подкреплением?', back: 'Он учится на взаимодействиях с окружением, балансирует исследование и использование.', status: 'unseen' },
+    { id: 'card-77', front: 'Как реализовать UCB1 в Python?', back: 'Для каждого варианта считать среднюю награду и доверительный интервал, выбирать вариант с max UCB.', status: 'unseen' },
+    { id: 'card-78', front: 'Как реализовать Thompson Sampling в Python?', back: 'Для каждого варианта генерировать случайное значение из бета-распределения, выбирать вариант с max значением.', status: 'unseen' },
+    { id: 'card-79', front: 'Какие преимущества у байесовского подхода?', back: 'Учет априорных знаний, естественная оценка неопределенности, интерпретируемость.', status: 'unseen' },
+    { id: 'card-80', front: 'Какие недостатки у байесовского подхода?', back: 'Вычислительная сложность, необходимость выбора априорных распределений.', status: 'unseen' },
+    { id: 'card-81', front: 'Что такое отношение шансов (odds ratio)?', back: 'Отношение шансов успеха в тестовой группе к шансам в контрольной группе.', status: 'unseen' },
+    { id: 'card-82', front: 'Как интерпретировать odds ratio?', back: 'OR > 1: тестовая группа лучше; OR < 1: контрольная группа лучше; OR = 1: нет разницы.', status: 'unseen' },
+    { id: 'card-83', front: 'Что такое поправка Йейтса в хи-квадрате?', back: 'Поправка для увеличения точности хи-квадрат теста для малых выборок.', status: 'unseen' },
+    { id: 'card-84', front: 'Когда использовать поправку Йейтса?', back: 'Для таблиц 2x2 с малыми ожидаемыми частотами (<5).', status: 'unseen' },
+    { id: 'card-85', front: 'Что такое центральная предельная теорема (ЦПТ)?', back: 'Теорема, согласно которой выборочное среднее стремится к нормальному распределению при увеличении выборки.', status: 'unseen' },
+    { id: 'card-86', front: 'Почему ЦПТ важна для A/B-тестов?', back: 'Она обосновывает использование Z-теста для пропорций при больших выборках.', status: 'unseen' },
+    { id: 'card-87', front: 'Что такое нормальное распределение?', back: 'Симметричное распределение, задаваемое средним и стандартным отклонением.', status: 'unseen' },
+    { id: 'card-88', front: 'Как проверить нормальность данных?', back: 'Использовать тесты Шапиро-Уилка или Колмогорова-Смирнова, построить Q-Q plot.', status: 'unseen' },
+    { id: 'card-89', front: 'Что делать, если данные не нормальны?', back: 'Использовать непараметрические тесты (например, Манна-Уитни).', status: 'unseen' },
+    { id: 'card-90', front: 'Что такое гомогенность дисперсий?', back: 'Равенство дисперсий в сравниваемых группах.', status: 'unseen' },
+    { id: 'card-91', front: 'Как проверить гомогенность дисперсий?', back: 'Использовать тест Левена или Бартлетта.', status: 'unseen' },
+    { id: 'card-92', front: 'Что делать, если дисперсии не равны?', back: 'Использовать модификации t-теста (например, Уэлча).', status: 'unseen' },
+    { id: 'card-93', front: 'Что такое ANOVA?', back: 'Метод сравнения средних значений в трех и более группах.', status: 'unseen' },
+    { id: 'card-94', front: 'Когда использовать ANOVA?', back: 'Для сравнения нескольких вариантов в A/B/n-тестах.', status: 'unseen' },
+    { id: 'card-95', front: 'Что такое множественные сравнения?', back: 'Проблема увеличения вероятности ложноположительных результатов при множественных тестах.', status: 'unseen' },
+    { id: 'card-96', front: 'Как корректировать множественные сравнения?', back: 'Использовать поправку Бонферрони или метод Холма.', status: 'unseen' },
+    { id: 'card-97', front: 'Что такое ковариаты в A/B-тестах?', back: 'Дополнительные переменные, которые могут влиять на результат.', status: 'unseen' },
+    { id: 'card-98', front: 'Как учесть ковариаты в анализе?', back: 'Использовать регрессионные модели (например, логистическую регрессию).', status: 'unseen' },
+    { id: 'card-99', front: 'Что такое стратификация в A/B-тестах?', back: 'Разделение пользователей на подгруппы для более точного сравнения.', status: 'unseen' },
+    { id: 'card-100', front: 'Как стратификация помогает в тестах?', back: 'Уменьшает вариабельность внутри групп, увеличивает мощность теста.', status: 'unseen' },
+    { id: 'card-101', front: 'Что такое последовательный анализ?', back: 'Метод, позволяющий проверять результаты теста по мере поступления данных.', status: 'unseen' },
+    { id: 'card-102', front: 'Какие методы последовательного анализа существуют?', back: 'Последовательный тест отношения правдоподобий, метод О\'Брайена-Флеминга.', status: 'unseen' },
+    { id: 'card-103', front: 'Что такое бутстрап в статистике?', back: 'Метод оценки распределения статистики путем повторной выборки с заменой.', status: 'unseen' },
+    { id: 'card-104', front: 'Как использовать бутстрап в A/B-тестах?', back: 'Для оценки доверительных интервалов разницы метрик без предположений о распределении.', status: 'unseen' },
+    { id: 'card-105', front: 'Что такое байесовский фактор?', back: 'Мера относительной поддержки одной гипотезы по сравнению с другой в байесовском анализе.', status: 'unseen' },
+    { id: 'card-106', front: 'Как интерпретировать байесовский фактор?', back: 'BF > 1 поддерживает H1, BF < 1 поддерживает H0; чем дальше от 1, тем сильнее поддержка.', status: 'unseen' },
+    { id: 'card-107', front: 'Что такое ROC-кривая?', back: 'График, показывающий компромисс между чувствительностью и специфичностью модели.', status: 'unseen' },
+    { id: 'card-108', front: 'Как ROC-кривая связана с A/B-тестами?', back: 'Может использоваться для оценки качества классификации вариантов.', status: 'unseen' },
+    { id: 'card-109', front: 'Что такое AUC?', back: 'Площадь под ROC-кривой, мера качества классификатора.', status: 'unseen' },
+    { id: 'card-110', front: 'Как AUC используется в A/B-тестах?', back: 'Для сравнения эффективности разных вариантов в задачах классификации.', status: 'unseen' },
+    { id: 'card-111', front: 'Что такое F-мера?', back: 'Гармоническое среднее точности и полноты, мера качества классификации.', status: 'unseen' },
+    { id: 'card-112', front: 'Как F-мера используется в A/B-тестах?', back: 'Для сравнения вариантов в задачах с дисбалансом классов.', status: 'unseen' },
+    { id: 'card-113', front: 'Что такое чувствительность (recall)?', back: 'Доля истинных положительных случаев, которые правильно идентифицированы.', status: 'unseen' },
+    { id: 'card-114', front: 'Что такое специфичность?', back: 'Доля истинных отрицательных случаев, которые правильно идентифицированы.', status: 'unseen' },
+    { id: 'card-115', front: 'Что такое точность (precision)?', back: 'Доля правильно идентифицированных положительных случаев среди всех предсказанных положительных.', status: 'unseen' },
+    { id: 'card-116', front: 'Как выбирать между точностью и полнотой?', back: 'Зависит от задачи: для минимизации ложных срабатываний — точность, для максимизации обнаружения — полнота.', status: 'unseen' },
+    { id: 'card-117', front: 'Что такое матрица ошибок?', back: 'Таблица, показывающая количество истинных и ложных положительных/отрицательных предсказаний.', status: 'unseen' },
+    { id: 'card-118', front: 'Как матрица ошибок используется в A/B-тестах?', back: 'Для визуализации эффективности разных вариантов в задачах классификации.', status: 'unseen' },
+    { id: 'card-119', front: 'Что такое дисперсия?', back: 'Мера разброса данных вокруг среднего значения.', status: 'unseen' },
+    { id: 'card-120', front: 'Как дисперсия влияет на A/B-тесты?', back: 'Высокая дисперсия требует большего размера выборки для обнаружения эффекта.', status: 'unseen' },
+    { id: 'card-121', front: 'Что такое стандартное отклонение?', back: 'Квадратный корень из дисперсии, мера разброса в исходных единицах.', status: 'unseen' },
+    { id: 'card-122', front: 'Как стандартное отклонение используется в A/B-тестах?', back: 'Для расчета доверительных интервалов и стандартных ошибок.', status: 'unseen' },
+    { id: 'card-123', front: 'Что такое стандартная ошибка?', back: 'Стандартное отклонение выборочного распределения статистики.', status: 'unseen' },
+    { id: 'card-124', front: 'Как стандартная ошибка используется в A/B-тестах?', back: 'Для оценки точности оценки среднего и расчета доверительных интервалов.', status: 'unseen' },
+    { id: 'card-125', front: 'Что такое корреляция?', back: 'Мера линейной зависимости между двумя переменными.', status: 'unseen' },
+    { id: 'card-126', front: 'Как корреляция влияет на A/B-тесты?', back: 'Высокая корреляция между метриками может требовать многомерного анализа.', status: 'unseen' },
+    { id: 'card-127', front: 'Что такое ковариация?', back: 'Мера совместной изменчивости двух переменных.', status: 'unseen' },
+    { id: 'card-128', front: 'Как ковариация используется в A/B-тестах?', back: 'Для анализа взаимосвязи между метриками и ковариатами.', status: 'unseen' },
+    { id: 'card-129', front: 'Что такое линейная регрессия?', back: 'Модель, предсказывающая зависимую переменную как линейную комбинацию независимых.', status: 'unseen' },
+    { id: 'card-130', front: 'Как линейная регрессия используется в A/B-тестах?', back: 'Для учета ковариат и стратификации при анализе результатов.', status: 'unseen' },
+    { id: 'card-131', front: 'Что такое логистическая регрессия?', back: 'Модель для предсказания вероятности бинарного исхода.', status: 'unseen' },
+    { id: 'card-132', front: 'Как логистическая регрессия используется в A/B-тестах?', back: 'Для анализа бинарных метрик (например, конверсии) с учетом ковариат.', status: 'unseen' },
+    { id: 'card-133', front: 'Что такое случайный лес?', back: 'Ансамблевый метод, строящий множество деревьев решений.', status: 'unseen' },
+    { id: 'card-134', front: 'Как случайный лес используется в A/B-тестах?', back: 'Для анализа нелинейных эффектов и взаимодействий между переменными.', status: 'unseen' },
+    { id: 'card-135', front: 'Что такое градиентный бустинг?', back: 'Ансамблевый метод, последовательно строящий модели для исправления ошибок предыдущих.', status: 'unseen' },
+    { id: 'card-136', front: 'Как градиентный бустинг используется в A/B-тестах?', back: 'Для анализа сложных зависимостей в данных и предсказания эффектов.', status: 'unseen' },
+    { id: 'card-137', front: 'Что такое кластеризация?', back: 'Метод группировки схожих объектов без предварительных меток.', status: 'unseen' },
+    { id: 'card-138', front: 'Как кластеризация используется в A/B-тестах?', back: 'Для сегментации пользователей перед тестированием или анализа результатов.', status: 'unseen' },
+    { id: 'card-139', front: 'Что такое метод главных компонент (PCA)?', back: 'Метод снижения размерности путем проецирования данных на ортогональные оси.', status: 'unseen' },
+    { id: 'card-140', front: 'Как PCA используется в A/B-тестах?', back: 'Для визуализации многомерных данных или уменьшения количества переменных.', status: 'unseen' },
+    { id: 'card-141', front: 'Что такое t-SNE?', back: 'Метод визуализации многомерных данных в двумерном или трехмерном пространстве.', status: 'unseen' },
+    { id: 'card-142', front: 'Как t-SNE используется в A/B-тестах?', back: 'Для визуализации различий между группами пользователей или вариантами.', status: 'unseen' },
+    { id: 'card-143', front: 'Что такое UMAP?', back: 'Метод снижения размерности, сохраняющий как локальную, так и глобальную структуру данных.', status: 'unseen' },
+    { id: 'card-144', front: 'Как UMAP используется в A/B-тестах?', back: 'Аналогично t-SNE, но с лучшей производительностью на больших данных.', status: 'unseen' },
+    { id: 'card-145', front: 'Что такое кросс-валидация?', back: 'Метод оценки моделей путем разделения данных на обучающую и тестовую выборки.', status: 'unseen' },
+    { id: 'card-146', front: 'Как кросс-валидация используется в A/B-тестах?', back: 'Для проверки устойчивости моделей, предсказывающих эффект теста.', status: 'unseen' },
+    { id: 'card-147', front: 'Что такое переобучение?', back: 'Когда модель слишком точно подстраивается под обучающие данные и плохо обобщается.', status: 'unseen' },
+    { id: 'card-148', front: 'Как избежать переобучения в A/B-тестах?', back: 'Использовать кросс-валидацию, регуляризацию, уменьшать сложность моделей.', status: 'unseen' },
+  { id: 'card-149', front: 'Что такое регуляризация?', back: 'Метод предотвращения переобучения путем добавления штрафа за сложность модели.', status: 'unseen' },
+    { id: 'card-150', front: 'Как регуляризация используется в A/B-тестах?', back: 'В регрессионных моделях для анализа результатов с множеством ковариат.', status: 'unseen' },
+    { id: 'card-151', front: 'Что такое L1-регуляризация (Lasso)?', back: 'Регуляризация, которая может обнулять коэффициенты, выполняя отбор признаков.', status: 'unseen' },
+    { id: 'card-152', front: 'Как Lasso используется в A/B-тестах?', back: 'Для выбора наиболее важных ковариат при анализе результатов теста.', status: 'unseen' },
+    { id: 'card-153', front: 'Что такое L2-регуляризация (Ridge)?', back: 'Регуляризация, уменьшающая коэффициенты, но не обнуляющая их.', status: 'unseen' },
+    { id: 'card-154', front: 'Как Ridge используется в A/B-тестах?', back: 'Для стабилизации оценок в регрессионных моделях при мультиколлинеарности.', status: 'unseen' },
+    { id: 'card-155', front: 'Что такое Elastic Net?', back: 'Комбинация L1 и L2 регуляризации.', status: 'unseen' },
+    { id: 'card-156', front: 'Как Elastic Net используется в A/B-тестах?', back: 'Когда нужно сочетать отбор признаков и уменьшение коэффициентов.', status: 'unseen' },
+    { id: 'card-157', front: 'Что такое мультиколлинеарность?', back: 'Высокая корреляция между независимыми переменными в модели.', status: 'unseen' },
+    { id: 'card-158', front: 'Как мультиколлинеарность влияет на A/B-тесты?', back: 'Может сделать оценки коэффициентов нестабильными и трудными для интерпретации.', status: 'unseen' },
+    { id: 'card-159', front: 'Что такое гетероскедастичность?', back: 'Непостоянство дисперсии ошибок модели.', status: 'unseen' },
+    { id: 'card-160', front: 'Как гетероскедастичность влияет на A/B-тесты?', back: 'Может привести к неэффективным оценкам и некорректным доверительным интервалам.', status: 'unseen' },
+    { id: 'card-161', front: 'Что такое гомоскедастичность?', back: 'Постоянство дисперсии ошибок модели.', status: 'unseen' },
+    { id: 'card-162', front: 'Почему гомоскедастичность важна в A/B-тестах?', back: 'Обеспечивает эффективность оценок и корректность статистических тестов.', status: 'unseen' },
+    { id: 'card-163', front: 'Что такое остатки в регрессии?', back: 'Разница между наблюдаемыми и предсказанными значениями.', status: 'unseen' },
+    { id: 'card-164', front: 'Как анализировать остатки в A/B-тестах?', back: 'Для проверки допущений модели (нормальность, гомоскедастичность).', status: 'unseen' },
+    { id: 'card-165', front: 'Что такое Q-Q plot?', back: 'График для проверки нормальности распределения.', status: 'unseen' },
+    { id: 'card-166', front: 'Как Q-Q plot используется в A/B-тестах?', back: 'Для проверки нормальности остатков регрессионных моделей.', status: 'unseen' },
+    { id: 'card-167', front: 'Что такое критерий согласия?', back: 'Тест для проверки соответствия данных определенному распределению.', status: 'unseen' },
+    { id: 'card-168', front: 'Как критерии согласия используются в A/B-тестах?', back: 'Для проверки нормальности данных перед применением параметрических тестов.', status: 'unseen' },
+    { id: 'card-169', front: 'Что такое критерий Шапиро-Уилка?', back: 'Тест для проверки нормальности распределения.', status: 'unseen' },
+    { id: 'card-170', front: 'Как критерий Шапиро-Уилка используется в A/B-тестах?', back: 'Для проверки нормальности данных перед t-тестом или ANOVA.', status: 'unseen' },
+    { id: 'card-171', front: 'Что такое критерий Колмогорова-Смирнова?', back: 'Тест для сравнения распределений или проверки соответствия теоретическому распределению.', status: 'unseen' },
+    { id: 'card-172', front: 'Как критерий Колмогорова-Смирнова используется в A/B-тестах?', back: 'Для сравнения распределений метрик между группами.', status: 'unseen' },
+    { id: 'card-173', front: 'Что такое критерий Левена?', back: 'Тест для проверки равенства дисперсий в группах.', status: 'unseen' },
+    { id: 'card-174', front: 'Как критерий Левена используется в A/B-тестах?', back: 'Для проверки гомогенности дисперсий перед t-тестом или ANOVA.', status: 'unseen' },
+    { id: 'card-175', front: 'Что такое критерий Бартлетта?', back: 'Тест для проверки равенства дисперсий, чувствительный к отклонениям от нормальности.', status: 'unseen' },
+    { id: 'card-176', front: 'Как критерий Бартлетта используется в A/B-тестах?', back: 'Альтернатива критерию Левена при нормальных данных.', status: 'unseen' },
+    { id: 'card-177', front: 'Что такое критерий Фридмана?', back: 'Непараметрический тест для сравнения трех и более связанных групп.', status: 'unseen' },
+    { id: 'card-178', front: 'Как критерий Фридмана используется в A/B-тестах?', back: 'Для сравнения нескольких вариантов при ненормальных данных.', status: 'unseen' },
+    { id: 'card-179', front: 'Что такое критерий Крускала-Уоллиса?', back: 'Непараметрический аналог ANOVA для независимых групп.', status: 'unseen' },
+    { id: 'card-180', front: 'Как критерий Крускала-Уоллиса используется в A/B-тестах?', back: 'Для сравнения нескольких вариантов при ненормальных данных.', status: 'unseen' },
+    { id: 'card-181', front: 'Что такое критерий знаков?', back: 'Непараметрический тест для сравнения двух связанных выборок.', status: 'unseen' },
+    { id: 'card-182', front: 'Как критерий знаков используется в A/B-тестах?', back: 'Для анализа парных данных при ненормальных распределениях.', status: 'unseen' },
+    { id: 'card-183', front: 'Что такое критерий Уилкоксона?', back: 'Непараметрический тест для сравнения двух связанных выборок (аналог парного t-теста).', status: 'unseen' },
+    { id: 'card-184', front: 'Как критерий Уилкоксона используется в A/B-тестах?', back: 'Для анализа парных данных при ненормальных распределениях.', status: 'unseen' },
+    { id: 'card-185', front: 'Что такое коэффициент корреляции Пирсона?', back: 'Мера линейной зависимости между двумя переменными.', status: 'unseen' },
+    { id: 'card-186', front: 'Как коэффициент Пирсона используется в A/B-тестах?', back: 'Для анализа связи между метриками и ковариатами.', status: 'unseen' },
+    { id: 'card-187', front: 'Что такое коэффициент корреляции Спирмена?', back: 'Мера монотонной зависимости между двумя переменными.', status: 'unseen' },
+    { id: 'card-188', front: 'Как коэффициент Спирмена используется в A/B-тестах?', back: 'Для анализа нелинейных зависимостей между метриками.', status: 'unseen' },
+    { id: 'card-189', front: 'Что такое коэффициент корреляции Кендалла?', back: 'Мера ранговой корреляции, устойчивая к выбросам.', status: 'unseen' },
+    { id: 'card-190', front: 'Как коэффициент Кендалла используется в A/B-тестах?', back: 'Для анализа зависимостей при небольших выборках с выбросами.', status: 'unseen' },
+    { id: 'card-191', front: 'Что такое коэффициент детерминации R²?', back: 'Доля дисперсии зависимой переменной, объясненная моделью.', status: 'unseen' },
+    { id: 'card-192', front: 'Как R² используется в A/B-тестах?', back: 'Для оценки качества регрессионных моделей при анализе результатов.', status: 'unseen' },
+    { id: 'card-193', front: 'Что такое скорректированный R²?', back: 'R² с поправкой на количество предикторов в модели.', status: 'unseen' },
+    { id: 'card-194', front: 'Как скорректированный R² используется в A/B-тестах?', back: 'Для сравнения моделей с разным количеством предикторов.', status: 'unseen' },
+    { id: 'card-195', front: 'Что такое AIC (информационный критерий Акаике)?', back: 'Мера качества модели с учетом её сложности.', status: 'unseen' },
+    { id: 'card-196', front: 'Как AIC используется в A/B-тестах?', back: 'Для выбора лучшей модели при анализе результатов теста.', status: 'unseen' },
+    { id: 'card-197', front: 'Что такое BIC (байесовский информационный критерий)?', back: 'Аналогичен AIC, но с более строгим штрафом за сложность модели.', status: 'unseen' },
+    { id: 'card-198', front: 'Как BIC используется в A/B-тестах?', back: 'Для выбора лучшей модели, особенно при больших выборках.', status: 'unseen' },
+    { id: 'card-199', front: 'Что такое кросс-энтропия?', back: 'Мера расхождения между распределениями, часто используемая в классификации.', status: 'unseen' },
+    { id: 'card-200', front: 'Как кросс-энтропия используется в A/B-тестах?', back: 'Для оценки качества моделей классификации при анализе бинарных метрик.', status: 'unseen' }
+]
+
+
+            let currentCardIndex = 0;
+            let shuffledOrder = [];
+            let isShuffled = false;
+
+             let currentDeck = []; // Карточки, которые сейчас отображаются
+             let isReviewMode = false;
+
+            let timerInterval = null;
+            let secondsElapsed = 0;
+
+
+            // --- Timer Functions ---
+             function formatTime(seconds) {
+                 const h = Math.floor(seconds / 3600);
+                 const m = Math.floor((seconds % 3600) / 60);
+                 const s = seconds % 60;
+                 const padded = [m, s].map(val => val.toString().padStart(2, '0'));
+                 if (h > 0) {
+                     return `${h.toString().padStart(2, '0')}:${padded[0]}:${padded[1]}`;
+                 }
+                 return `${padded[0]}:${padded[1]}`;
+             }
+
+             function startTimer() {
+                 if (timerInterval) clearInterval(timerInterval);
+                 timerDisplay.textContent = formatTime(secondsElapsed);
+                 timerInterval = setInterval(() => {
+                     secondsElapsed++;
+                     timerDisplay.textContent = formatTime(secondsElapsed);
+                 }, 1000);
+             }
+
+             function stopTimer() {
+                 if (timerInterval) {
+                     clearInterval(timerInterval);
+                     timerInterval = null;
+                 }
+             }
+
+             function resetTimer() {
+                 stopTimer();
+                 secondsElapsed = 0;
+                 timerDisplay.textContent = formatTime(secondsElapsed);
+             }
+
+
+            // --- Card Display and Navigation ---
+
+            function getCardData(index) {
+                 const sourceCards = (isShuffled && !isReviewMode && shuffledOrder && shuffledOrder.length === cards.length) ?
+                                    shuffledOrder.map(i => cards[i]) :
+                                    currentDeck;
+
+                 if (sourceCards.length === 0) {
+                     return null;
+                 }
+
+                 const actualIndex = index % sourceCards.length;
+                 const wrappedIndex = actualIndex < 0 ? actualIndex + sourceCards.length : actualIndex;
+
+                 if (isShuffled && !isReviewMode && shuffledOrder && shuffledOrder.length === cards.length) {
+                      const originalIndex = shuffledOrder[wrappedIndex];
+                      return cards[originalIndex];
+                  } else {
+                      return currentDeck[wrappedIndex];
+                  }
             }
-        }
 
-        function updateStats() {
-            cardsPassedElement.textContent = cardsPassed;
-            cardsKnownElement.textContent = cardsKnown;
-            percentKnownElement.textContent = displayedCards.length > 0
-                ? `${Math.round((cardsKnown / displayedCards.length) * 100)}%`
-                : '0%';
-        }
-
-        function nextCard() {
-            if (currentCardIndex < displayedCards.length - 1) {
-                currentCardIndex++;
-                displayCard(currentCardIndex);
-            }
-        }
-
-        function prevCard() {
-            if (currentCardIndex > 0) {
-                currentCardIndex--;
-                displayCard(currentCardIndex);
-            }
-        }
-
-        function shuffleCards() {
-            let currentIndex = flashcardsData.length, randomIndex;
-            while (currentIndex != 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [flashcardsData[currentIndex], flashcardsData[randomIndex]] = [
-                    flashcardsData[randomIndex], flashcardsData[currentIndex]];
-            }
-            displayedCards = [...flashcardsData];
-            currentCardIndex = 0;
-            cardsPassed = 0;
-            cardsKnown = 0;
-            knownCards = [];
-            isRecheckMode = false;
-            statsContainer.style.display = 'none';
-            resetButtonsContainer.style.display = 'none';
-            displayCard(currentCardIndex);
-            prevButton.disabled = true;
-            nextButton.disabled = false;
-        }
-
-        function recheckUnknownCards() {
-            if (knownCards.length === flashcardsData.length && !isRecheckMode) {
-                return;
-            }
-            if (!isRecheckMode) {
-                displayedCards = flashcardsData.filter((_, index) => !knownCards.includes(index));
-                isRecheckMode = true;
-                cardsPassed = 0;
-                cardsKnown = 0;
-            }
-
-            if (displayedCards.length === 0) {
-                alert("Вы выучили все карточки!");
-                isRecheckMode = false;
-                displayedCards = [...flashcardsData];
-                currentCardIndex = 0;
-                cardsPassed = 0;
-                cardsKnown = 0;
-                knownCards = [];
-                statsContainer.style.display = 'none';
-                resetButtonsContainer.style.display = 'none';
-                displayCard(currentCardIndex);
-                prevButton.disabled = true;
-                nextButton.disabled = false;
-                return;
-            }
-            currentCardIndex = 0;
-            displayCard(currentCardIndex);
-            counterElement.textContent = `${currentCardIndex + 1} / ${displayedCards.length}`;
-            prevButton.disabled = true;
-            nextButton.disabled = displayedCards.length <= 1;
-            statsContainer.style.display = 'none';
-            resetButtonsContainer.style.display= 'none';
-        }
-
-        function markCardAsKnown(isKnown) {
-            if (isRecheckMode) {
-                const cardIndex = displayedCards[currentCardIndex]
-                if (isKnown) {
-                    cardsKnown++;
-                    knownCards.push(cardIndex);
-                    displayedCards.splice(currentCardIndex, 1);
-                } else {
-                    nextCard();
-                }
-                if (displayedCards.length === 0) {
-                    statsContainer.style.display = 'block';
-                    resetButtonsContainer.style.display = 'flex';
-                    updateStats();
-                    alert("Вы повторили все карточки!");
-                }
-                else {
-                     counterElement.textContent = `${currentCardIndex + 1} / ${displayedCards.length}`;
+            function displayCard(index) {
+                 // Проверяем, есть ли карточки в текущей колоде
+                if (currentDeck.length === 0) {
+                     cardFrontText.textContent = isReviewMode ? "Нет карточек для повторения." : "Нет карточек.";
+                     cardBackText.textContent = isReviewMode ? "Добавьте карточки или отметьте их для повторения." : "Добавьте карточки.";
+                     flashcard.classList.remove('is-flipped');
+                     prevButton.disabled = true;
+                     nextButton.disabled = true;
+                     actionButtons.forEach(btn => btn.style.visibility = 'hidden');
+                     shuffleButton.disabled = true;
+                     toggleReviewModeButton.disabled = true;
+                     currentCardIndex = 0;
                      updateStats();
-                }
-                if (displayedCards.length === 0) {
-                    statsContainer.style.display = 'block';
-                    resetButtonsContainer.style.display = 'flex';
-                    updateStats();
-                }
-                else{
-                     displayCard(currentCardIndex);
+                     return;
                 }
 
-            }
-            else {
-                if (isKnown) {
-                    cardsKnown++;
-                    knownCards.push(currentCardIndex);
+                // Включаем кнопки, если они были отключены
+                 prevButton.disabled = false;
+                 nextButton.disabled = false;
+                 actionButtons.forEach(btn => btn.style.visibility = 'visible');
+                 shuffleButton.disabled = isReviewMode;
+                 toggleReviewModeButton.disabled = false;
+
+
+                // Корректируем индекс, чтобы он оставался в пределах текущей колоды (циклическая навигация)
+                currentCardIndex = index;
+                if (currentCardIndex < 0) currentCardIndex = currentDeck.length - 1;
+                if (currentCardIndex >= currentDeck.length) currentCardIndex = 0;
+
+
+                const card = getCardData(currentCardIndex);
+
+
+                if (card) {
+                    cardFrontText.textContent = card.front;
+                    cardBackText.textContent = card.back;
+                } else {
+                     console.error("[displayCard] getCardData returned null.");
+                     cardFrontText.textContent = "Ошибка загрузки карточки";
+                     cardBackText.textContent = "Ошибка загрузки карточки";
                 }
-                cardsPassed++;
+
+                flashcard.classList.remove('is-flipped'); // <<< Убедимся, что всегда показываем лицевую сторону следующей карточки
+
                 updateStats();
-                if (cardsPassed === flashcardsData.length) {
-                    statsContainer.style.display = 'block';
-                    resetButtonsContainer.style.display = 'flex';
-                    alert("Вы прошли все карточки!");
-                }
             }
-        }
 
-        flashcardElement.addEventListener('click', () => {
-            flashcardElement.classList.toggle('flipped');
-            if (flashcardElement.classList.contains('flipped')) {
-                if (feedbackButtonsContainer) {
-                    feedbackButtonsContainer.style.display = 'flex';
-                }
+            function flipCard() {
+                 if (currentDeck.length === 0) return;
+                flashcard.classList.toggle('is-flipped');
             }
-            else {
-                if (feedbackButtonsContainer) {
-                    feedbackButtonsContainer.style.display = 'none';
-                }
-            }
-        });
-        nextButton.addEventListener('click', nextCard);
-        prevButton.addEventListener('click', prevCard);
-        shuffleButton.addEventListener('click', shuffleCards);
-        recheckButton.addEventListener('click', recheckUnknownCards);
-        resetButton.addEventListener('click', shuffleCards);
-        recheckButtonBottom.addEventListener('click', recheckUnknownCards);
 
-        if (feedbackButtonsContainer) {
-            feedbackButtonsContainer.addEventListener('click', (event) => {
-                if (event.target.classList.contains('know-button')) {
-                    markCardAsKnown(true);
-                } else if (event.target.classList.contains('dont-know-button')) {
-                    markCardAsKnown(false);
+            function nextCard() {
+                if (currentDeck.length === 0) {
+                     return;
                 }
-                if (!isRecheckMode) {
-                     nextCard();
+                 const nextIndex = (currentCardIndex + 1) % currentDeck.length;
+                displayCard(nextIndex);
+            }
+
+            function prevCard() {
+                 if (currentDeck.length === 0) {
+                      return;
+                 }
+                 const prevIndex = (currentCardIndex - 1 + currentDeck.length) % currentDeck.length;
+                displayCard(prevIndex);
+            }
+
+            function shuffleCards() {
+                if (cards.length === 0 || isReviewMode) {
+                     return;
                 }
 
+                isReviewMode = false;
+                shuffleButton.disabled = false;
+                // Текст кнопки "Повторить" будет обновлен в updateStats
+
+                shuffledOrder = Array.from({ length: cards.length }, (_, i) => i);
+
+                 // Алгоритм перемешивания Фишера-Йетса
+                for (let i = shuffledOrder.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffledOrder[i], shuffledOrder[j]] = [shuffledOrder[j], shuffledOrder[i]]; // меняем местами
+                }
+                isShuffled = true;
+                currentDeck = cards; // currentDeck все еще полная колода
+                currentCardIndex = 0;
+                displayCard(currentCardIndex); // Обновляем дисплей
+            }
+
+             // --- Режим повторения ---
+             function toggleReviewMode() {
+                 if (cards.length === 0) {
+                     return;
+                 }
+
+                 stopTimer();
+
+                 if (!isReviewMode) { // Переключаемся в режим повторения
+                     const reviewCards = cards.filter(card => card.status === 'review');
+                     if (reviewCards.length === 0) {
+                         alert("Нет карточек, требующих повторения.");
+                         startTimer(); // Возобновляем таймер
+                         return;
+                     }
+                     isReviewMode = true;
+                     currentDeck = reviewCards; // Теперь currentDeck только для повторения
+                     shuffleButton.disabled = true;
+                     toggleReviewModeButton.textContent = `Показать все (${cards.length})`; // Показываем общее кол-во при выходе
+                     currentCardIndex = 0; // Начинаем сначала колоды повторения
+                 } else { // Переключаемся обратно в обычный режим
+                     isReviewMode = false;
+                     currentDeck = cards; // Возвращаемся к полной колоде
+                     isShuffled = false; // Сбрасываем перемешивание при выходе из режима повторения
+                     shuffledOrder = Array.from({ length: cards.length }, (_, i) => i); // Возвращаем исходный порядок
+                     shuffleButton.disabled = false;
+                     const reviewCount = cards.filter(card => card.status === 'review').length;
+                     toggleReviewModeButton.textContent = `Повторить (${reviewCount})`; // Обновляем счетчик
+                      currentCardIndex = 0; // Начинаем сначала полной колоды
+                 }
+
+                 displayCard(currentCardIndex); // Отображаем первую карточку новой колоды
+                 startTimer();
+             }
+
+
+            // --- Status ---
+            function markCard(status) {
+                 if (currentDeck.length === 0 || !flashcard.classList.contains('is-flipped')) {
+                     return;
+                 }
+
+                const currentCardOnDisplay = getCardData(currentCardIndex);
+
+                if (!currentCardOnDisplay) {
+                     console.error("[markCard] Could not get card data for current index.");
+                     return;
+                }
+
+                // Находим эту карточку в оригинальном массиве cards, чтобы обновить ее статус там
+                const originalCard = cards.find(c => c.id === currentCardOnDisplay.id);
+
+                if (originalCard) {
+                    const oldStatus = originalCard.status;
+                    originalCard.status = status; // Обновляем статус в оригинальном массиве
+
+
+                     // Если мы в режиме повторения И статус изменился с 'review' на что-то другое,
+                     // удаляем карточку из currentDeck
+                     if (isReviewMode && oldStatus === 'review' && status !== 'review') {
+                          currentDeck = currentDeck.filter(c => c.id !== originalCard.id);
+
+                          // Корректируем currentCardIndex, если он стал невалидным после удаления
+                           if (currentDeck.length === 0) {
+                               currentCardIndex = 0; // Колода стала пустой
+                           } else if (currentCardIndex >= currentDeck.length) {
+                              currentCardIndex = currentDeck.length - 1; // Adjust index if it's now out of bounds
+                           } else {
+                               // Индекс остался валидным, остаемся на нем, displayCard покажет следующую по кругу
+                           }
+
+                     } else {
+                         // Не в режиме повторения ИЛИ статус остался 'review'
+                         // В этих случаях мы ДОЛЖНЫ перейти к следующей карточке в текущей колоде.
+                         currentCardIndex = (currentCardIndex + 1) % currentDeck.length; // ИСПРАВЛЕНИЕ ПЕРЕХОДА!
+                     }
+
+
+                     updateStats(); // Обновляем статистику (основываясь на полном массиве cards)
+                     checkCompletion(); // Проверяем, все ли изучено
+
+                     // Переходим к следующей карточке в текущей (возможно, уменьшенной) колоде
+                     // displayCard сам скорректирует индекс, если он вышел за пределы,
+                     // и покажет лицевую сторону.
+                     displayCard(currentCardIndex); // displayCard отобразит карточку по новому индексу и покажет лицевую сторону
+                } else {
+                     console.error("[markCard] Original card not found in 'cards' array.");
+                }
+            }
+
+             // --- Statistics ---
+             function updateStats() {
+                 const total = cards.length;
+                 const learnedCount = cards.filter(card => card.status === 'learned').length;
+                 const reviewCount = cards.filter(card => card.status === 'review').length;
+                 const unseenCount = cards.filter(card => card.status === 'unseen').length;
+                 const seenCount = total - unseenCount;
+
+                 // Обновляем сводную статистику в хедере
+                 cardCountsDisplay.textContent = `И: ${learnedCount}, П: ${reviewCount}, В: ${total}`;
+
+
+                 // Обновляем подробную статистику в блоке статистики
+                 totalCardsStats.textContent = total;
+                 learnedStats.textContent = learnedCount;
+                 reviewStats.textContent = reviewCount;
+                 seenStats.textContent = seenCount;
+
+                 // Обновляем текст кнопки "Повторить" со актуальным числом карточек на повторении
+                 // В режиме "Показать все" текст уже другой
+                 if (!isReviewMode) {
+                     toggleReviewModeButton.textContent = `Повторить (${reviewCount})`;
+                 }
+             }
+
+             function toggleStatsVisibility() {
+                  const isHidden = statsArea.style.display === 'none';
+                  statsArea.style.display = isHidden ? 'block' : 'none';
+                  toggleStatsButton.textContent = isHidden ? 'Скрыть статистику' : 'Показать статистику';
+             }
+
+             // --- Completion Logic ---
+             function checkCompletion() {
+                 const allLearned = cards.length > 0 && cards.every(card => card.status === 'learned');
+                 if (allLearned) {
+                     showCompletionMessage();
+                 }
+             }
+
+             function showCompletionMessage() {
+                 stopTimer();
+                 finalTimeDisplay.textContent = formatTime(secondsElapsed);
+                 completionModal.classList.add('visible');
+                 document.body.style.overflow = 'hidden';
+             }
+
+             function hideCompletionMessage() {
+                 completionModal.classList.remove('visible');
+                 document.body.style.overflow = '';
+             }
+
+            // --- Reset Functionality ---
+            function resetApp() {
+                 // Сбрасываем статусы всех карточек на 'unseen'
+                 // Создаем НОВЫЙ массив карточек с исходными статусами
+                 cards = cards;
+
+                 // Сбрасываем все связанные состояния
+                 isReviewMode = false;
+                 isShuffled = false;
+                 currentDeck = cards; // Возвращаемся к полной колоде
+                 shuffledOrder = Array.from({ length: cards.length }, (_, i) => i); // Сбрасываем порядок перемешивания
+                 currentCardIndex = 0;
+                 resetTimer(); // Сбрасываем и запускаем таймер заново
+
+                 // Обновляем UI (текст кнопок, статистика)
+                 updateStats(); // updateStats обновит текст кнопки "Повторить" и сводную статистику
+                 shuffleButton.disabled = false; // Включаем кнопку перемешать
+                 toggleReviewModeButton.disabled = false; // Включаем кнопку повторения
+
+
+                 // Перемешиваем и отображаем первую карточку
+                 shuffleCards(); // shuffleCards вызовет displayCard
+            }
+
+            // --- "Начать заново" после завершения ---
+            function startOverFromCompletion() {
+                 hideCompletionMessage(); // Скрываем модальное окно
+                 resetApp(); // Вызываем основную функцию сброса
+            }
+
+
+            // --- Theme Toggle ---
+            function toggleTheme() {
+                document.body.classList.toggle('dark-mode');
+            }
+
+            // --- Event Listeners ---
+            flashcard.addEventListener('click', flipCard);
+
+            // Навигация по кругу в текущей колоде
+            prevButton.addEventListener('click', prevCard);
+            nextButton.addEventListener('click', nextCard);
+
+            shuffleButton.addEventListener('click', shuffleCards); // Слушатель для кнопки внизу
+            toggleReviewModeButton.addEventListener('click', toggleReviewMode); // Слушатель для кнопки внизу
+            themeToggleButton.addEventListener('click', toggleTheme);
+            toggleStatsButton.addEventListener('click', toggleStatsVisibility);
+            resetAppButton.addEventListener('click', resetApp); // Слушатель для кнопки внизу
+
+
+            actionButtons.forEach(button => {
+                button.addEventListener('click', (event) => {
+                     event.stopPropagation(); // Предотвращаем переворот карточки
+                     markCard(button.dataset.status);
+                });
             });
-        }
 
-        shuffleCards();
+             // Слушатель для кнопки "Начать заново" в модальном окне
+             startOverButton.addEventListener('click', startOverFromCompletion);
+
+             // Закрытие модального окна при клике вне контента
+             completionModal.addEventListener('click', (event) => {
+                 if (event.target === completionModal) {
+                     // При желании, можно добавить закрытие по клику вне:
+                     // hideCompletionMessage();
+                 }
+             });
+
+
+             // --- Keyboard Navigation ---
+             document.addEventListener('keydown', (event) => {
+                 // Если модальное окно видимо, обрабатываем только Enter/Space
+                 if (completionModal.classList.contains('visible')) {
+                     if (event.code === 'Enter' || event.code === 'Space') {
+                         event.preventDefault();
+                         startOverButton.click(); // Эмулируем клик по кнопке
+                     }
+                     return; // Игнорируем другие нажатия клавиш
+                 }
+
+                 // Навигация (стрелки влево/вправо)
+                 if (event.code === 'ArrowLeft') {
+                     event.preventDefault();
+                     prevCard();
+                 } else if (event.code === 'ArrowRight') {
+                     event.preventDefault();
+                     nextCard();
+                 }
+                 // Переворот (Пробел)
+                 else if (event.code === 'Space') {
+                     event.preventDefault(); // Предотвращаем прокрутку страницы
+                     flipCard();
+                 }
+                  // Добавить обработку клавиш 1, 2 и т.д. для отметки статуса, если нужно
+             });
+
+
+            // --- Initialization ---
+            // Инициализация состояний по умолчанию при загрузке страницы
+            // Массив cards уже определен выше с начальными статусами
+            cards = cards;
+			
+            currentDeck = cards; // По умолчанию показываем все
+            shuffledOrder = Array.from({ length: cards.length }, (_, i) => i);
+            isShuffled = false;
+            isReviewMode = false;
+            currentCardIndex = 0;
+            secondsElapsed = 0; // Таймер с 0 при старте
+            statsArea.style.display = 'none';
+            toggleStatsButton.textContent = 'Показать статистику';
+            shuffleButton.disabled = false; // Включена по умолчанию
+            toggleReviewModeButton.disabled = false; // Включена по умолчанию
+
+
+            displayCard(currentCardIndex); // Отображаем начальную карточку (она вызовет updateStats)
+            startTimer(); // Запускаем таймер
+            checkCompletion(); // Проверяем завершение (вероятно, не сработает при старте без сохранения)
+        });
     </script>
 </body>
 </html>
